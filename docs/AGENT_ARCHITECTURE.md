@@ -244,3 +244,59 @@ step.
 SYNTH-008 additionally carries `time_infeasible=True`. SYNTH-015 is fixed_high_risk with an
 invisible-only `hba1c` lever: optimization is attempted but cannot move the score →
 `OPTIMIZED_BUT_STILL_HIGH_RISK` (honest).
+
+---
+
+# Step 7: access gate (the accessibility core)
+
+`src/gate/` applies the two-tier capability profile as a **hard gate** over the whole
+pathway the loop produced, rewriting every step as **"do locally in Sihor" (Tier 1)** vs
+**"trip to Bhavnagar" (Tier 2)** vs **"access barrier"**. It reuses `src/feasibility.py`
+exactly. It **annotates and flags but never overrules the clinical verdict and never
+drops an intervention.**
+
+## Tier routing — `tier_routing.py`
+
+Each lever maps to its required `capability_id`(s) (`LEVER_CAPABILITIES`). An intervention
+is gated on **all** of them, **most-restrictive-wins** (reusing `govern_feasibility` →
+`check_feasibility`):
+
+| feasibility status | routing |
+|--------------------|---------|
+| `LOCAL` | Do locally in Sihor (Tier 1) |
+| `PARTIAL_LOCAL` | Likely local in Sihor, verify (Tier 1, flagged) |
+| `NEEDS_TERTIARY` | Requires trip to Bhavnagar (Tier 2) |
+| `PARTIAL_TERTIARY` | Likely Bhavnagar, verify (Tier 2, flagged) |
+| `UNAVAILABLE` | **ACCESS BARRIER** — not available at either tier (flagged, not dropped) |
+
+A capability_id absent from the profile raises (never guessed). "partial" is carried
+through explicitly, never coerced to yes/no.
+
+## Trip accounting — `trip_accounting.py`
+
+Minimizing travel from Sihor is the story. `trip_count` = (distinct loop **phases** that
+contain a tertiary intervention) + (1 for the CABG, always tertiary). **Batching
+assumption `[TO VERIFY]`:** tertiary interventions in the *same* loop phase share one
+trip. `access_barriers` = any `UNAVAILABLE` intervention across the whole pathway. If
+`trip_count > config.MAX_TERTIARY_TRIPS` (default 3, `[TO VERIFY]`), the **`access_strain`**
+flag fires — an access concern **orthogonal** to clinical risk, exactly like
+`TIME_INFEASIBLE`.
+
+## The gated pathway — `access_gate.py`
+
+`apply_access_gate(loop_result) -> GatedPathway`, carrying: the loop's `terminal_state` and
+`time_infeasible` **unchanged**; the **required-for-operability** routed pathway; the
+**designed-but-not-required** routed remainder (early-stop tail), clearly separated; the
+CABG surgical routing (→ Bhavnagar); `trip_count`, `access_barriers`, `access_strain`, and
+an `access_summary` (local vs tertiary-trip vs barrier counts).
+
+The honest coupling: a patient stays `OPERABLE_AFTER_OPTIMIZATION` even under
+`access_strain` — the output then reads *"clinically reversible, but logistically strained:
+N trips to Bhavnagar required."*
+
+## Worked example (grandmother, SYNTH-006)
+
+Required (crosses at phase 1): `hba1c` and `mobility` → **both local in Sihor** (partial,
+flagged). Designed-not-required tail: `asthma_control`, `heart_failure_symptoms` → local.
+CABG → **Bhavnagar**. **`trip_count = 1`** (surgery only) — every optimization step is
+local; the single trip is the operation itself. That is the accessibility payoff.
