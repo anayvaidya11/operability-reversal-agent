@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-_PROFILE_PATH = Path(__file__).resolve().parent.parent / "data" / "capability_profile.json"
+_DEFAULT_PROFILE_PATH = Path(__file__).resolve().parent.parent / "data" / "capability_profile.json"
 
 _VALID_TIERS = ("local", "tertiary")
 
@@ -43,30 +43,35 @@ class FeasibilityResult:
     note: str
 
 
-_capabilities_cache: dict[str, dict] | None = None
+# Cache keyed by resolved profile path so different profiles don't collide.
+_capabilities_cache: dict[str, dict[str, dict]] = {}
 
 
-def _load_capabilities() -> dict[str, dict]:
+def _load_capabilities(profile_path: Path) -> dict[str, dict]:
     """Load and cache the capability profile as {capability_id: capability_dict}."""
-    global _capabilities_cache
-    if _capabilities_cache is None:
-        data = json.loads(_PROFILE_PATH.read_text())
-        _capabilities_cache = {c["capability_id"]: c for c in data["capabilities"]}
-    return _capabilities_cache
+    key = str(profile_path.resolve())
+    if key not in _capabilities_cache:
+        data = json.loads(profile_path.read_text())
+        _capabilities_cache[key] = {c["capability_id"]: c for c in data["capabilities"]}
+    return _capabilities_cache[key]
 
 
-def check_feasibility(action_id: str, tier: str) -> FeasibilityResult:
+def check_feasibility(
+    action_id: str, tier: str, profile_path: str | Path | None = None
+) -> FeasibilityResult:
     """Return a FeasibilityResult for `action_id` given the patient's current `tier`.
 
-    Raises UnknownCapabilityError for an unrecognized action_id, and ValueError for an
-    invalid tier (fail loud)."""
+    `profile_path` defaults to data/capability_profile.json. Raises
+    UnknownCapabilityError for an unrecognized action_id, and ValueError for an invalid
+    tier (fail loud)."""
     if tier not in _VALID_TIERS:
         raise ValueError(f"tier must be one of {_VALID_TIERS}, got {tier!r}")
 
-    caps = _load_capabilities()
+    path = Path(profile_path) if profile_path is not None else _DEFAULT_PROFILE_PATH
+    caps = _load_capabilities(path)
     if action_id not in caps:
         raise UnknownCapabilityError(
-            f"unknown capability_id {action_id!r} (not in {_PROFILE_PATH.name})"
+            f"unknown capability_id {action_id!r} (not in {path.name})"
         )
 
     cap = caps[action_id]
