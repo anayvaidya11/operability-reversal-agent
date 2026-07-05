@@ -81,6 +81,17 @@ def get_operability_threshold(threshold: float | None = None) -> float:
 
 
 # =============================================================================
+# Surgical-urgency optimization budget (Step 5)
+# =============================================================================
+# For a non-elective (e.g. "urgent") case, how many weeks of pre-operative optimization
+# the pathway can realistically afford before the plan should be flagged for human review
+# as too slow. This is a MODELING PROXY, not a clinical rule: real urgency windows are a
+# case-by-case surgical judgement.
+# [TO VERIFY — realistic urgent pre-op optimization window with clinical input.]
+MAX_URGENT_OPTIMIZATION_WEEKS: int = 4
+
+
+# =============================================================================
 # Modifiable-lever <-> EuroSCORE-field mapping (single source of truth)
 # =============================================================================
 # The EuroSCORE II input fields that are ALSO modifiable levers ("euroscore_visible" /

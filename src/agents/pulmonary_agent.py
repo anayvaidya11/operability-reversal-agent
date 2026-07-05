@@ -74,6 +74,14 @@ def run(
                     "complications [TO VERIFY — cite source]."
                 ),
                 profile_path=capability_profile_path,
+                cross_specialty_flags=[
+                    {
+                        "interacts_with": "endocrine",
+                        "target_lever": "hba1c",
+                        "mechanism": "steroid_hyperglycemia",
+                        "direction": "worsens",
+                    }
+                ],
             )
         )
         result.warnings.append(_ICS_GLYCEMIA_WARNING)

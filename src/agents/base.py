@@ -36,6 +36,7 @@ def make_recommendation(
     weeks_estimate: int,
     evidence_note: str,
     profile_path: str | Path | None,
+    cross_specialty_flags: list | None = None,
 ) -> Recommendation:
     """Build a Recommendation, resolving the governing feasibility across `capabilities`
     at the patient's `tier`."""
@@ -49,4 +50,5 @@ def make_recommendation(
         feasibility=feasibility,
         weeks_estimate=weeks_estimate,
         evidence_note=evidence_note,
+        cross_specialty_flags=cross_specialty_flags or [],
     )

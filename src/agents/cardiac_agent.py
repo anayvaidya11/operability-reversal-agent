@@ -80,6 +80,14 @@ def run(
                     "pre-operatively [TO VERIFY — cite source]."
                 ),
                 profile_path=capability_profile_path,
+                cross_specialty_flags=[
+                    {
+                        "interacts_with": "pulmonary",
+                        "target_lever": "asthma_control",
+                        "mechanism": "betablocker_bronchospasm",
+                        "direction": "worsens",
+                    }
+                ],
             )
         )
         result.warnings.append(_BETA_BLOCKER_WARNING)

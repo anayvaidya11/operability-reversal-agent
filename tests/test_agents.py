@@ -34,6 +34,10 @@ def test_grandmother_cardiac():
     # flags fixed cardiac factors
     assert any("coronary anatomy" in f for f in r.out_of_scope_flags)
     assert any("lv_function" in f for f in r.out_of_scope_flags)
+    # structured cross-specialty flag on the heart_failure recommendation (Step 5)
+    hf = [x for x in r.recommendations if x.lever == "heart_failure_symptoms"][0]
+    assert {"interacts_with": "pulmonary", "target_lever": "asthma_control",
+            "mechanism": "betablocker_bronchospasm", "direction": "worsens"} in hf.cross_specialty_flags
 
 
 def test_grandmother_endocrine():
@@ -53,6 +57,9 @@ def test_grandmother_pulmonary():
     assert _levers(r) == {"asthma_control"}          # grandmother does not smoke
     assert _has(r.warnings, "ICS dose increase will worsen glycemic control")
     assert r.recommendations[0].euroscore_field == "chronic_lung_disease"
+    # structured cross-specialty flag on the asthma_control recommendation (Step 5)
+    assert {"interacts_with": "endocrine", "target_lever": "hba1c",
+            "mechanism": "steroid_hyperglycemia", "direction": "worsens"} in r.recommendations[0].cross_specialty_flags
 
 
 # --- (b) SYNTH-001 operable at baseline: all agents empty ----------------------------

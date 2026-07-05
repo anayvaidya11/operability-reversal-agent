@@ -26,6 +26,11 @@ class Recommendation:
     weeks_estimate: int             # integer weeks (sourced or [TO VERIFY])
     evidence_note: str              # one-sentence grounding or [TO VERIFY]
     conflicts_with: list = field(default_factory=list)  # [] here; Step 5 fills
+    # Structured cross-specialty interaction markers (Step 5). Each item, e.g.
+    # {"interacts_with": "endocrine", "target_lever": "hba1c",
+    #  "mechanism": "steroid_hyperglycemia", "direction": "worsens"}, mirrors a
+    # human-readable warning and lets the conflict detector work structurally, not by NLP.
+    cross_specialty_flags: list = field(default_factory=list)
 
 
 @dataclass
