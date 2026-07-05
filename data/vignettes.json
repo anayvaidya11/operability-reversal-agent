@@ -1,0 +1,988 @@
+{
+  "_meta": {
+    "synthetic": true,
+    "warning": "ALL PATIENTS BELOW ARE FICTIONAL AND SYNTHETIC. No real patient data is used, ingested, or represented. Any resemblance to a real person is coincidental. This is a non-validated humanitarian proof-of-concept.",
+    "spec_source": "docs/SPEC.md v0.1",
+    "step": "Step 2 of 10 — data artifacts only (no risk math, no agent logic).",
+    "design_intent_values": [
+      "operable_at_baseline",
+      "reversible_with_optimization",
+      "fixed_high_risk"
+    ],
+    "euroscore_input_fields": [
+      "age",
+      "sex",
+      "renal_impairment",
+      "extracardiac_arteriopathy",
+      "poor_mobility",
+      "previous_cardiac_surgery",
+      "chronic_lung_disease",
+      "active_endocarditis",
+      "critical_preoperative_state",
+      "diabetes_on_insulin",
+      "nyha_class",
+      "ccs_class4_angina",
+      "lv_function",
+      "recent_mi",
+      "pulmonary_hypertension",
+      "urgency",
+      "weight_of_intervention",
+      "thoracic_aorta_surgery"
+    ],
+    "modifiable_euroscore_visible_fields": [
+      "chronic_lung_disease",
+      "poor_mobility",
+      "nyha_class",
+      "critical_preoperative_state"
+    ],
+    "coupling_design_note": "Each modifiable lever a vignette carries is tagged 'euroscore_visible' (improving it changes a EuroSCORE II input directly) or 'needs_risk_modifier' (EuroSCORE II cannot see it directly; a supplementary modifier layer is deferred to Step 3). CONSTRAINT: every 'reversible_with_optimization' vignette carries at least two 'euroscore_visible' modifiable levers in a burdened state, so the reversal loop can demonstrably move the EuroSCORE II score BEFORE any supplementary modifier exists. NOTE / AMBIGUITY: SPEC.md section f names six modifiable levers (glycemic control, pulmonary/asthma, smoking, anemia, nutrition/albumin, blood pressure), of which only pulmonary/asthma maps to a EuroSCORE II input (chronic_lung_disease). To satisfy the coupling requirement this step ALSO treats mobility (poor_mobility), heart-failure symptoms (nyha_class), and critical pre-op state (critical_preoperative_state) as modifiable euroscore_visible levers, as directed by the Step 2 task. SPEC.md section d/f currently describes NYHA/cardiac factors as 'largely fixed'; this extension must be reconciled with SPEC.md. [TO VERIFY — reconcile modifiable-lever set between SPEC.md section f and Step 2 vignettes].",
+    "supplementary_modifier_flag": "[TO VERIFY — define grounding for non-EuroSCORE factors in Step 3]",
+    "verify_flags": [
+      "[TO VERIFY — reconcile modifiable-lever set between SPEC.md section f and Step 2 vignettes]",
+      "[TO VERIFY — define grounding for non-EuroSCORE factors in Step 3]",
+      "[TO VERIFY — exact EuroSCORE II categorical encodings/thresholds for renal_impairment, lv_function, pulmonary_hypertension, weight_of_intervention per Nashef et al. 2012]",
+      "[TO VERIFY — asthma to EuroSCORE II chronic_lung_disease mapping per SPEC.md section d]",
+      "[TO VERIFY — clinical targets/thresholds for hba1c, hemoglobin/anemia, albumin, blood pressure, smoking cessation interval per SPEC.md section f]"
+    ]
+  },
+  "vignettes": [
+    {
+      "id": "SYNTH-001",
+      "synthetic": true,
+      "design_intent": "operable_at_baseline",
+      "grandmother_analog": false,
+      "rationale": "Younger, well-preserved heart, no lung disease, no meaningful modifiable burden. Predicted risk should already sit below any reasonable operability threshold; included as a control case that needs no reversal.",
+      "location_tier": "local",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Two-vessel disease, stable angina, CABG elected over PCI (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 58,
+        "sex": "male",
+        "renal_impairment": "normal",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": false,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": false,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "II",
+        "ccs_class4_angina": false,
+        "lv_function": "good",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "blood_pressure",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "mildly_elevated",
+          "optimizable": true,
+          "note": "Mildly elevated BP; not a EuroSCORE II input. [TO VERIFY — BP target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-002",
+      "synthetic": true,
+      "design_intent": "operable_at_baseline",
+      "grandmother_analog": false,
+      "rationale": "Low fixed burden, good ventricular function, no diabetes. Only a single soft modifiable factor; well within operable range at baseline.",
+      "location_tier": "tertiary",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Single-vessel LAD disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 61,
+        "sex": "female",
+        "renal_impairment": "normal",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": false,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": false,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "I",
+        "ccs_class4_angina": false,
+        "lv_function": "good",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "smoking_status",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "recently_quit",
+          "optimizable": true,
+          "note": "Already in cessation; not a EuroSCORE II input. [TO VERIFY — recommended cessation interval per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-003",
+      "synthetic": true,
+      "design_intent": "operable_at_baseline",
+      "grandmother_analog": false,
+      "rationale": "Type 2 diabetic but diet/oral controlled (not on insulin) and good heart function. Baseline risk low; glycemic lever is minor and invisible to EuroSCORE II.",
+      "location_tier": "local",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Two-vessel disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 55,
+        "sex": "male",
+        "renal_impairment": "normal",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": false,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": false,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "II",
+        "ccs_class4_angina": false,
+        "lv_function": "good",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "hba1c",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "mildly_elevated",
+          "optimizable": true,
+          "note": "Oral-controlled diabetes, HbA1c slightly above target; not a EuroSCORE II input. [TO VERIFY — HbA1c target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-004",
+      "synthetic": true,
+      "design_intent": "operable_at_baseline",
+      "grandmother_analog": false,
+      "rationale": "Minimal comorbidity, no modifiable levers of note. Pure control case: agent should recognize no reversal is required.",
+      "location_tier": "tertiary",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Two-vessel disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 63,
+        "sex": "female",
+        "renal_impairment": "normal",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": false,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": false,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "I",
+        "ccs_class4_angina": false,
+        "lv_function": "good",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": []
+    },
+    {
+      "id": "SYNTH-005",
+      "synthetic": true,
+      "design_intent": "operable_at_baseline",
+      "grandmother_analog": false,
+      "rationale": "Moderate age with well-controlled profile and preserved LV function. One soft nutritional lever, no euroscore-visible burden; baseline operable.",
+      "location_tier": "local",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Single-vessel disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 60,
+        "sex": "male",
+        "renal_impairment": "normal",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": false,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": false,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "II",
+        "ccs_class4_angina": false,
+        "lv_function": "good",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "albumin",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "borderline_low",
+          "optimizable": true,
+          "note": "Borderline nutrition; not a EuroSCORE II input. [TO VERIFY — albumin/nutrition target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-006",
+      "synthetic": true,
+      "design_intent": "reversible_with_optimization",
+      "grandmother_analog": true,
+      "rationale": "GRANDMOTHER ANALOG. Elderly woman from Sihor with ~90% coronary blockage (CABG indicated), type 2 diabetes on insulin, and poorly controlled asthma, declined as too risky. Her elevated risk is driven substantially by MODIFIABLE, EuroSCORE-visible burden: uncontrolled asthma (chronic_lung_disease), deconditioning (poor_mobility), and heart-failure symptoms (NYHA III), plus non-visible levers (HbA1c, anemia). Optimizing the visible levers should move the EuroSCORE II score toward operable even before the Step 3 modifier layer exists.",
+      "location_tier": "local",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "~90% proximal LAD stenosis, CABG indicated (synthetic; mirrors the motivating case).",
+        "home_town": "Sihor, Bhavnagar district, Gujarat, India (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 71,
+        "sex": "female",
+        "renal_impairment": "moderate",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": true,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": true,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": true,
+        "nyha_class": "III",
+        "ccs_class4_angina": false,
+        "lv_function": "moderate",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "asthma_control",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "chronic_lung_disease",
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Frequent exacerbations; maps to EuroSCORE II chronic_lung_disease input. [TO VERIFY — asthma to chronic_lung_disease mapping per SPEC.md section d]."
+        },
+        {
+          "lever": "mobility",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "poor_mobility",
+          "status": "deconditioned",
+          "optimizable": true,
+          "note": "Deconditioning amenable to prehabilitation; maps to EuroSCORE II poor_mobility input."
+        },
+        {
+          "lever": "heart_failure_symptoms",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "nyha_class",
+          "status": "nyha_III",
+          "optimizable": true,
+          "note": "Symptomatic; medical optimization may improve NYHA class. [TO VERIFY — reconcile NYHA-as-modifiable with SPEC.md section f]."
+        },
+        {
+          "lever": "hba1c",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Elevated HbA1c; not a EuroSCORE II input. [TO VERIFY — HbA1c target per SPEC.md section f]."
+        },
+        {
+          "lever": "anemia",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "low_hemoglobin",
+          "optimizable": true,
+          "note": "Anemia present; not a EuroSCORE II input. [TO VERIFY — hemoglobin/anemia target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-007",
+      "synthetic": true,
+      "design_intent": "reversible_with_optimization",
+      "grandmother_analog": false,
+      "rationale": "Declined patient whose risk is inflated by uncontrolled asthma and deconditioning (both euroscore-visible) plus poor nutrition and glycemic control. Optimizing the visible levers should shift the score below threshold.",
+      "location_tier": "local",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Triple-vessel disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 66,
+        "sex": "male",
+        "renal_impairment": "normal",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": true,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": true,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "II",
+        "ccs_class4_angina": false,
+        "lv_function": "moderate",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "asthma_control",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "chronic_lung_disease",
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Maps to EuroSCORE II chronic_lung_disease. [TO VERIFY — asthma to chronic_lung_disease mapping per SPEC.md section d]."
+        },
+        {
+          "lever": "mobility",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "poor_mobility",
+          "status": "deconditioned",
+          "optimizable": true,
+          "note": "Prehabilitation candidate; maps to EuroSCORE II poor_mobility."
+        },
+        {
+          "lever": "hba1c",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "elevated",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — HbA1c target per SPEC.md section f]."
+        },
+        {
+          "lever": "albumin",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "low",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — albumin/nutrition target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-008",
+      "synthetic": true,
+      "design_intent": "reversible_with_optimization",
+      "grandmother_analog": false,
+      "rationale": "Presented decompensated: a critical pre-operative state that is itself modifiable through stabilization, plus uncontrolled asthma. Both are euroscore-visible, so stabilization and pulmonary optimization should reduce risk substantially.",
+      "location_tier": "tertiary",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Triple-vessel disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 69,
+        "sex": "female",
+        "renal_impairment": "moderate",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": false,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": true,
+        "active_endocarditis": false,
+        "critical_preoperative_state": true,
+        "diabetes_on_insulin": true,
+        "nyha_class": "III",
+        "ccs_class4_angina": false,
+        "lv_function": "moderate",
+        "recent_mi": false,
+        "pulmonary_hypertension": "moderate",
+        "urgency": "urgent",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "critical_preop_stabilization",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "critical_preoperative_state",
+          "status": "present",
+          "optimizable": true,
+          "note": "Decompensation potentially reversible with stabilization; maps to EuroSCORE II critical_preoperative_state. [TO VERIFY — reconcile critical-state-as-modifiable with SPEC.md]."
+        },
+        {
+          "lever": "asthma_control",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "chronic_lung_disease",
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Maps to EuroSCORE II chronic_lung_disease. [TO VERIFY — asthma to chronic_lung_disease mapping per SPEC.md section d]."
+        },
+        {
+          "lever": "hba1c",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — HbA1c target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-009",
+      "synthetic": true,
+      "design_intent": "reversible_with_optimization",
+      "grandmother_analog": false,
+      "rationale": "Active smoker with uncontrolled asthma, deconditioning, and heart-failure symptoms. Three euroscore-visible levers give ample room to move the score before any modifier layer.",
+      "location_tier": "local",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Triple-vessel disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 64,
+        "sex": "male",
+        "renal_impairment": "normal",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": true,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": true,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "III",
+        "ccs_class4_angina": false,
+        "lv_function": "moderate",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "asthma_control",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "chronic_lung_disease",
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Maps to EuroSCORE II chronic_lung_disease. [TO VERIFY — asthma to chronic_lung_disease mapping per SPEC.md section d]."
+        },
+        {
+          "lever": "mobility",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "poor_mobility",
+          "status": "deconditioned",
+          "optimizable": true,
+          "note": "Prehabilitation candidate; maps to EuroSCORE II poor_mobility."
+        },
+        {
+          "lever": "heart_failure_symptoms",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "nyha_class",
+          "status": "nyha_III",
+          "optimizable": true,
+          "note": "Medical optimization may improve NYHA class. [TO VERIFY — reconcile NYHA-as-modifiable with SPEC.md section f]."
+        },
+        {
+          "lever": "smoking_status",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "active_smoker",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — cessation interval per SPEC.md section f]."
+        },
+        {
+          "lever": "hba1c",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "elevated",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — HbA1c target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-010",
+      "synthetic": true,
+      "design_intent": "reversible_with_optimization",
+      "grandmother_analog": false,
+      "rationale": "Insulin-treated diabetic with uncontrolled asthma and deconditioning; anemia adds hidden burden. Two euroscore-visible levers plus modifier-dependent anemia/glycemia.",
+      "location_tier": "local",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Two-vessel disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 67,
+        "sex": "female",
+        "renal_impairment": "moderate",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": true,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": true,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": true,
+        "nyha_class": "II",
+        "ccs_class4_angina": false,
+        "lv_function": "moderate",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "asthma_control",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "chronic_lung_disease",
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Maps to EuroSCORE II chronic_lung_disease. [TO VERIFY — asthma to chronic_lung_disease mapping per SPEC.md section d]."
+        },
+        {
+          "lever": "mobility",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "poor_mobility",
+          "status": "deconditioned",
+          "optimizable": true,
+          "note": "Prehabilitation candidate; maps to EuroSCORE II poor_mobility."
+        },
+        {
+          "lever": "hba1c",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — HbA1c target per SPEC.md section f]."
+        },
+        {
+          "lever": "anemia",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "low_hemoglobin",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — hemoglobin/anemia target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-011",
+      "synthetic": true,
+      "design_intent": "reversible_with_optimization",
+      "grandmother_analog": false,
+      "rationale": "Risk dominated by heart-failure symptoms, deconditioning, and uncontrolled asthma — all euroscore-visible and modifiable — with hypertension as an additional soft lever.",
+      "location_tier": "tertiary",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Triple-vessel disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 62,
+        "sex": "male",
+        "renal_impairment": "normal",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": true,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": true,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "III",
+        "ccs_class4_angina": false,
+        "lv_function": "moderate",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "heart_failure_symptoms",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "nyha_class",
+          "status": "nyha_III",
+          "optimizable": true,
+          "note": "Medical optimization may improve NYHA class. [TO VERIFY — reconcile NYHA-as-modifiable with SPEC.md section f]."
+        },
+        {
+          "lever": "mobility",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "poor_mobility",
+          "status": "deconditioned",
+          "optimizable": true,
+          "note": "Prehabilitation candidate; maps to EuroSCORE II poor_mobility."
+        },
+        {
+          "lever": "asthma_control",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "chronic_lung_disease",
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Maps to EuroSCORE II chronic_lung_disease. [TO VERIFY — asthma to chronic_lung_disease mapping per SPEC.md section d]."
+        },
+        {
+          "lever": "blood_pressure",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "elevated",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — BP target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-012",
+      "synthetic": true,
+      "design_intent": "reversible_with_optimization",
+      "grandmother_analog": false,
+      "rationale": "Older reversible case: uncontrolled asthma, symptomatic heart failure, and deconditioning dominate; nutrition and glycemia add modifier-dependent burden. Age is a fixed anchor but does not by itself exceed the threshold.",
+      "location_tier": "local",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Triple-vessel disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 70,
+        "sex": "female",
+        "renal_impairment": "moderate",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": true,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": true,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": true,
+        "nyha_class": "III",
+        "ccs_class4_angina": false,
+        "lv_function": "moderate",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "asthma_control",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "chronic_lung_disease",
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Maps to EuroSCORE II chronic_lung_disease. [TO VERIFY — asthma to chronic_lung_disease mapping per SPEC.md section d]."
+        },
+        {
+          "lever": "mobility",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "poor_mobility",
+          "status": "deconditioned",
+          "optimizable": true,
+          "note": "Prehabilitation candidate; maps to EuroSCORE II poor_mobility."
+        },
+        {
+          "lever": "heart_failure_symptoms",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "nyha_class",
+          "status": "nyha_III",
+          "optimizable": true,
+          "note": "Medical optimization may improve NYHA class. [TO VERIFY — reconcile NYHA-as-modifiable with SPEC.md section f]."
+        },
+        {
+          "lever": "albumin",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "low",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — albumin/nutrition target per SPEC.md section f]."
+        },
+        {
+          "lever": "hba1c",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "elevated",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — HbA1c target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-013",
+      "synthetic": true,
+      "design_intent": "reversible_with_optimization",
+      "grandmother_analog": false,
+      "rationale": "Uncontrolled asthma plus deconditioning are the visible drivers; anemia and active smoking add modifier-dependent burden. Fixed factors are modest, so reversal is plausible.",
+      "location_tier": "local",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Two-vessel disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 65,
+        "sex": "male",
+        "renal_impairment": "normal",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": true,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": true,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "II",
+        "ccs_class4_angina": false,
+        "lv_function": "moderate",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "asthma_control",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "chronic_lung_disease",
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Maps to EuroSCORE II chronic_lung_disease. [TO VERIFY — asthma to chronic_lung_disease mapping per SPEC.md section d]."
+        },
+        {
+          "lever": "mobility",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "poor_mobility",
+          "status": "deconditioned",
+          "optimizable": true,
+          "note": "Prehabilitation candidate; maps to EuroSCORE II poor_mobility."
+        },
+        {
+          "lever": "anemia",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "low_hemoglobin",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — hemoglobin/anemia target per SPEC.md section f]."
+        },
+        {
+          "lever": "smoking_status",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "active_smoker",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — cessation interval per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-014",
+      "synthetic": true,
+      "design_intent": "fixed_high_risk",
+      "grandmother_analog": false,
+      "rationale": "HONESTY CASE. Very elderly, redo surgery, poor LV, recent MI, severe renal impairment and vascular disease. Risk is dominated by FIXED factors; the only modifiable lever is already optimized, so no reversal pathway should bring this below threshold. The agent must be able to say 'no'.",
+      "location_tier": "tertiary",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Left main plus triple-vessel disease, redo CABG (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 82,
+        "sex": "male",
+        "renal_impairment": "severe",
+        "extracardiac_arteriopathy": true,
+        "poor_mobility": false,
+        "previous_cardiac_surgery": true,
+        "chronic_lung_disease": false,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "III",
+        "ccs_class4_angina": false,
+        "lv_function": "poor",
+        "recent_mi": true,
+        "pulmonary_hypertension": "moderate",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "blood_pressure",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "already_optimized",
+          "optimizable": false,
+          "note": "BP already at target; not a EuroSCORE II input and no headroom to reduce risk. [TO VERIFY — BP target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-015",
+      "synthetic": true,
+      "design_intent": "fixed_high_risk",
+      "grandmother_analog": false,
+      "rationale": "HONESTY CASE. Redo surgery with poor LV, recent MI, and severe pulmonary hypertension. No euroscore-visible modifiable burden; the one soft lever cannot offset the fixed structural risk.",
+      "location_tier": "tertiary",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Triple-vessel disease with prior grafts, redo CABG (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 79,
+        "sex": "female",
+        "renal_impairment": "moderate",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": false,
+        "previous_cardiac_surgery": true,
+        "chronic_lung_disease": false,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": true,
+        "nyha_class": "III",
+        "ccs_class4_angina": true,
+        "lv_function": "poor",
+        "recent_mi": true,
+        "pulmonary_hypertension": "severe",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "hba1c",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "mildly_elevated",
+          "optimizable": true,
+          "note": "Modest glycemic headroom, invisible to EuroSCORE II; cannot offset fixed structural risk. [TO VERIFY — HbA1c target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-016",
+      "synthetic": true,
+      "design_intent": "fixed_high_risk",
+      "grandmother_analog": false,
+      "rationale": "HONESTY CASE. Dialysis-dependent, very elderly, vascular disease and poor LV. Risk is structural and fixed; no modifiable levers carried. Reversal should not be offered.",
+      "location_tier": "tertiary",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Left main disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 84,
+        "sex": "male",
+        "renal_impairment": "on_dialysis",
+        "extracardiac_arteriopathy": true,
+        "poor_mobility": false,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": false,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": true,
+        "nyha_class": "III",
+        "ccs_class4_angina": false,
+        "lv_function": "poor",
+        "recent_mi": false,
+        "pulmonary_hypertension": "moderate",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": []
+    },
+    {
+      "id": "SYNTH-017",
+      "synthetic": true,
+      "design_intent": "fixed_high_risk",
+      "grandmother_analog": false,
+      "rationale": "HONESTY CASE. Redo surgery, poor LV, class 4 angina, and recent MI. Fixed cardiac burden dominates; the single soft nutritional lever cannot cross the threshold.",
+      "location_tier": "tertiary",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Triple-vessel disease with failed grafts, redo CABG (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 77,
+        "sex": "female",
+        "renal_impairment": "moderate",
+        "extracardiac_arteriopathy": false,
+        "poor_mobility": false,
+        "previous_cardiac_surgery": true,
+        "chronic_lung_disease": false,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "III",
+        "ccs_class4_angina": true,
+        "lv_function": "poor",
+        "recent_mi": true,
+        "pulmonary_hypertension": "moderate",
+        "urgency": "urgent",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "albumin",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "borderline_low",
+          "optimizable": true,
+          "note": "Minor nutritional headroom, invisible to EuroSCORE II; cannot offset fixed cardiac risk. [TO VERIFY — albumin/nutrition target per SPEC.md section f]."
+        }
+      ]
+    },
+    {
+      "id": "SYNTH-018",
+      "synthetic": true,
+      "design_intent": "fixed_high_risk",
+      "grandmother_analog": false,
+      "rationale": "HONESTY CASE. Very elderly with vascular disease, poor LV, severe pulmonary hypertension, and severe renal impairment. Entirely fixed structural risk; no modifiable levers. The agent must decline to promise reversal.",
+      "location_tier": "tertiary",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Left main plus triple-vessel disease, CABG indicated (synthetic)."
+      },
+      "euroscore_inputs": {
+        "age": 81,
+        "sex": "male",
+        "renal_impairment": "severe",
+        "extracardiac_arteriopathy": true,
+        "poor_mobility": false,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": false,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "III",
+        "ccs_class4_angina": false,
+        "lv_function": "poor",
+        "recent_mi": false,
+        "pulmonary_hypertension": "severe",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": []
+    }
+  ]
+}

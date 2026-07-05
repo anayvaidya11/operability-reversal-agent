@@ -1,0 +1,257 @@
+{
+  "_meta": {
+    "synthetic": true,
+    "warning": "This is a CONCEPTUAL capability profile for a proof-of-concept. Availability values are WORKING ASSUMPTIONS, not verified facts. Every real-world clinical/logistical specific is flagged with [TO VERIFY] in its notes and must be confirmed against a local source before use.",
+    "spec_source": "docs/SPEC.md v0.1 section c (Geography & care-tier model).",
+    "step": "Step 2 of 10 — data artifacts only.",
+    "structure_note": "Follows the SPEC.md section c table structure (capability_id, description, local_available, tertiary_available, notes) and adds a 'category' field grouping capabilities into labs_diagnostics, medications, procedures, specialist_availability as directed by the Step 2 task.",
+    "availability_values": ["yes", "no", "partial", "unknown"],
+    "category_values": ["labs_diagnostics", "medications", "procedures", "specialist_availability"]
+  },
+  "tiers": {
+    "local": {
+      "tier": 1,
+      "name": "Local — Sihor Community Health Centre / small private hospitals",
+      "description": "First-contact and ongoing primary care close to the patient's home. Conceptually supports basic tests, common medications, monitoring, and routine pre-operative optimization; conceptually cannot perform cardiac surgery or provide advanced cardiac intervention/critical care. [TO VERIFY — actual Sihor CHC and small private hospital capabilities against a local source]."
+    },
+    "tertiary": {
+      "tier": 2,
+      "name": "Tertiary — Bhavnagar",
+      "description": "Advanced hospital care ~20-25 km away. Conceptually can perform CABG and provide advanced cardiac diagnostics, intervention, and peri-operative critical care; conceptually not the site for continuous day-to-day local optimization. [TO VERIFY — actual Bhavnagar tertiary capabilities and distance against a local source]."
+    }
+  },
+  "capabilities": [
+    {
+      "capability_id": "hba1c_test",
+      "category": "labs_diagnostics",
+      "description": "HbA1c blood test (glycemic control over recent months).",
+      "local_available": "partial",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — whether Sihor CHC can run HbA1c on-site or must send samples out, and turnaround time]."
+    },
+    {
+      "capability_id": "cbc_hemoglobin",
+      "category": "labs_diagnostics",
+      "description": "Complete blood count / hemoglobin (anemia detection).",
+      "local_available": "yes",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — CBC availability and reliability at Sihor CHC / small private labs]."
+    },
+    {
+      "capability_id": "serum_albumin",
+      "category": "labs_diagnostics",
+      "description": "Serum albumin (nutritional status proxy).",
+      "local_available": "partial",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — whether serum albumin is available locally]."
+    },
+    {
+      "capability_id": "serum_creatinine",
+      "category": "labs_diagnostics",
+      "description": "Serum creatinine / renal function.",
+      "local_available": "yes",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — creatinine testing availability locally]."
+    },
+    {
+      "capability_id": "spirometry",
+      "category": "labs_diagnostics",
+      "description": "Spirometry / pulmonary function testing (asthma assessment).",
+      "local_available": "partial",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — whether spirometry is available at Sihor local tier]."
+    },
+    {
+      "capability_id": "ecg",
+      "category": "labs_diagnostics",
+      "description": "12-lead electrocardiogram.",
+      "local_available": "yes",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — ECG availability at Sihor CHC / small private]."
+    },
+    {
+      "capability_id": "chest_xray",
+      "category": "labs_diagnostics",
+      "description": "Chest radiography.",
+      "local_available": "partial",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — chest X-ray availability locally]."
+    },
+    {
+      "capability_id": "echocardiography",
+      "category": "labs_diagnostics",
+      "description": "Echocardiography (LV function / valve assessment).",
+      "local_available": "partial",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — echocardiography access and operator availability locally]."
+    },
+    {
+      "capability_id": "coronary_angiography",
+      "category": "labs_diagnostics",
+      "description": "Coronary angiography (defines coronary anatomy).",
+      "local_available": "no",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — assumed tertiary-only; confirm Bhavnagar cath lab availability]."
+    },
+    {
+      "capability_id": "oral_hypoglycemics",
+      "category": "medications",
+      "description": "Oral glucose-lowering medications.",
+      "local_available": "yes",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — supply/stock reliability at local tier]."
+    },
+    {
+      "capability_id": "insulin",
+      "category": "medications",
+      "description": "Insulin therapy and titration.",
+      "local_available": "partial",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — insulin availability, cold chain, and titration support locally]."
+    },
+    {
+      "capability_id": "inhaled_bronchodilators",
+      "category": "medications",
+      "description": "Inhaled bronchodilators (asthma reliever therapy).",
+      "local_available": "yes",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — inhaler supply and patient inhaler technique support locally]."
+    },
+    {
+      "capability_id": "inhaled_corticosteroids",
+      "category": "medications",
+      "description": "Inhaled corticosteroids (asthma controller therapy).",
+      "local_available": "partial",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — controller inhaler availability/affordability locally]."
+    },
+    {
+      "capability_id": "antihypertensives",
+      "category": "medications",
+      "description": "Antihypertensive medications.",
+      "local_available": "yes",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — antihypertensive supply reliability locally]."
+    },
+    {
+      "capability_id": "oral_iron",
+      "category": "medications",
+      "description": "Oral iron for anemia correction.",
+      "local_available": "yes",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — oral iron availability; IV iron likely tertiary-only]."
+    },
+    {
+      "capability_id": "antiplatelets_statins",
+      "category": "medications",
+      "description": "Antiplatelet and statin therapy.",
+      "local_available": "yes",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — supply reliability locally]."
+    },
+    {
+      "capability_id": "smoking_cessation_support",
+      "category": "medications",
+      "description": "Smoking cessation counseling / pharmacotherapy.",
+      "local_available": "partial",
+      "tertiary_available": "partial",
+      "notes": "[TO VERIFY — whether structured cessation support exists at either tier]."
+    },
+    {
+      "capability_id": "nutritional_support",
+      "category": "medications",
+      "description": "Nutritional assessment and supplementation.",
+      "local_available": "partial",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — availability of dietitian/nutritional support at each tier]."
+    },
+    {
+      "capability_id": "cabg",
+      "category": "procedures",
+      "description": "Coronary artery bypass grafting.",
+      "local_available": "no",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — assumed tertiary-only per SPEC.md; confirm Bhavnagar cardiac surgery capability]."
+    },
+    {
+      "capability_id": "pci",
+      "category": "procedures",
+      "description": "Percutaneous coronary intervention (angioplasty/stent).",
+      "local_available": "no",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — assumed tertiary-only; confirm PCI availability]. Note: PCI is out of the CABG-focused scope but recorded for tier context."
+    },
+    {
+      "capability_id": "cardiac_icu",
+      "category": "procedures",
+      "description": "Peri-operative cardiac intensive care.",
+      "local_available": "no",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — assumed tertiary-only; confirm cardiac ICU capacity]."
+    },
+    {
+      "capability_id": "blood_transfusion",
+      "category": "procedures",
+      "description": "Blood transfusion services.",
+      "local_available": "partial",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — local blood bank / transfusion availability]."
+    },
+    {
+      "capability_id": "prehabilitation",
+      "category": "procedures",
+      "description": "Supervised physical prehabilitation / conditioning.",
+      "local_available": "partial",
+      "tertiary_available": "partial",
+      "notes": "[TO VERIFY — whether structured prehabilitation/physiotherapy exists at either tier]."
+    },
+    {
+      "capability_id": "general_physician",
+      "category": "specialist_availability",
+      "description": "General physician / primary care clinician.",
+      "local_available": "yes",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — staffing continuity at Sihor CHC]."
+    },
+    {
+      "capability_id": "cardiologist",
+      "category": "specialist_availability",
+      "description": "Cardiologist.",
+      "local_available": "no",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — assumed tertiary-only; confirm cardiology availability at Bhavnagar]."
+    },
+    {
+      "capability_id": "cardiac_surgeon",
+      "category": "specialist_availability",
+      "description": "Cardiac surgeon.",
+      "local_available": "no",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — assumed tertiary-only; confirm cardiac surgery team at Bhavnagar]."
+    },
+    {
+      "capability_id": "endocrinologist",
+      "category": "specialist_availability",
+      "description": "Endocrinologist (diabetes specialist).",
+      "local_available": "no",
+      "tertiary_available": "partial",
+      "notes": "[TO VERIFY — endocrinology access; much diabetes care may be delivered by general physicians locally]."
+    },
+    {
+      "capability_id": "pulmonologist",
+      "category": "specialist_availability",
+      "description": "Pulmonologist (respiratory specialist).",
+      "local_available": "no",
+      "tertiary_available": "partial",
+      "notes": "[TO VERIFY — pulmonology access at tertiary tier]."
+    },
+    {
+      "capability_id": "anesthesiology",
+      "category": "specialist_availability",
+      "description": "Anesthesiology / peri-operative care.",
+      "local_available": "partial",
+      "tertiary_available": "yes",
+      "notes": "[TO VERIFY — cardiac anesthesiology assumed tertiary-only]. Anesthesiology as an independent reasoner is out of scope per SPEC.md section b."
+    }
+  ]
+}
