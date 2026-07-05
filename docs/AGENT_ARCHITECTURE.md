@@ -107,3 +107,76 @@ unknown capability surfaces loudly.
   concern in warnings; Step 5 must decide ordering.
 - A policy for recommendations whose governing feasibility is `PARTIAL_*` or `UNAVAILABLE`
   (escalate, substitute, or flag as blocking).
+
+---
+
+# Step 5: conflict detection + resolution + time-phased sequencing
+
+The `src/planner/` package consumes the specialists' output (the dict from
+`run_all_specialists`) and produces a time-phased `OptimizationPlan`. It is **fully
+deterministic and rule-based — no LLM**. It does **not** recompute risk (Step 6), does
+**not** hard-filter on feasibility (Step 6), and does **not** render prose (Step 8).
+
+## Two detection signals (and only two) — `conflicts.py`
+
+`detect_conflicts(specialist_outputs) -> list[Conflict]`:
+
+1. **`euroscore_field_overlap`** — two recommendations from *different* specialties target
+   the same EuroSCORE field → `resource_overlap` (severity `blocking`). The agents own
+   disjoint fields, so this is normally empty; implemented for correctness.
+2. **`agent_warning`** — a recommendation carries a **structured `cross_specialty_flag`**
+   (e.g. `{"interacts_with": "endocrine", "target_lever": "hba1c",
+   "mechanism": "steroid_hyperglycemia", "direction": "worsens"}`) that names a partner
+   specialty + lever actually present in the plan → `clinical_interaction` (severity
+   `ordering`). Detection matches these **structured markers**, never free-text — the
+   agents were extended (Step 5) to attach the flag alongside the human-readable warning.
+
+The two concrete interactions caught: **ICS↔glycemia** (pulmonary `asthma_control` ×
+endocrine `hba1c`, mechanism `steroid_hyperglycemia`) and **beta-blocker↔asthma** (cardiac
+`heart_failure_symptoms` × pulmonary `asthma_control`, mechanism `betablocker_bronchospasm`).
+
+## Rule registry + resolver — `resolution_rules.py`
+
+A registry of named `Rule`s, each with `applies_to` (kind + mechanism), an `ordering`
+(`(first_lever, second_lever)` or `"parallel_with_monitoring"`), `rationale`, `source`
+(citation or `[TO VERIFY]`), and `monitoring_note`:
+
+- **`RULE_GLYCEMIA_BEFORE_ICS`** — glycemic optimization first, then ICS step-up with
+  glucose monitoring. Ordering, not "drop one".
+- **`RULE_BETABLOCKER_ASTHMA`** — establish pulmonary control before beta-blocker
+  titration; cardioselective agent only with pulmonology sign-off; **conditional-blocking
+  on the beta-blocker lever only** if asthma stays uncontrolled (the rest of the
+  heart-failure plan proceeds). Modeled as `ordering` (asthma before heart_failure).
+
+`resolve_conflicts(...) -> ResolutionResult` matches each conflict to a rule. **A conflict
+with no matching rule is never guessed** — it is escalated as
+`"UNRESOLVED — human review required"` and carried onto the plan.
+
+## Sequencing algorithm — `sequencer.py`
+
+`build_sequence(vignette, specialist_outputs, resolutions) -> OptimizationPlan`:
+
+- Ordering edges come only from resolutions whose *both* levers are present. Levers are
+  **longest-path layered** into phases: unconstrained levers share a phase (concurrent);
+  a lever with predecessors lands one phase later.
+- `duration_weeks` per phase = **max `weeks_estimate`** of its (concurrent) interventions.
+  Total plan duration = sum of phase durations (phases are sequential).
+- **Surgical-urgency constraint**: for a non-`elective` `urgency`, if total duration
+  exceeds `config.MAX_URGENT_OPTIMIZATION_WEEKS` (default 4, `[TO VERIFY]`), emit an
+  `urgency_warning` naming the phases that would overrun the budget — **phases are never
+  silently dropped**, the tension is flagged for human review.
+- The plan carries `unresolved_conflicts`, a `rationale_trace`, `total_duration_weeks`,
+  and (where relevant) `urgency_warning`. It makes **no operability verdict** — that is
+  Step 6.
+
+## Worked example (grandmother, SYNTH-006, elective)
+
+Conflicts: ICS↔glycemia and beta-blocker↔asthma (both resolved). Resulting phases:
+
+| Phase | Weeks | Interventions | Why |
+|-------|-------|---------------|-----|
+| 1 | 12 | `hba1c`, `mobility` (concurrent) | glycemia has no predecessor; mobility unconstrained |
+| 2 | 8 | `asthma_control` | after glycemia (RULE_GLYCEMIA_BEFORE_ICS) |
+| 3 | 8 | `heart_failure_symptoms` | after pulmonary control (RULE_BETABLOCKER_ASTHMA) |
+
+Total 28 weeks; elective → no urgency warning; glycemia (P1) strictly precedes ICS (P2).
