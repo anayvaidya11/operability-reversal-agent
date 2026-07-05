@@ -1,39 +1,33 @@
 """
-Tier-routing model for the access gate (Step 7).
+Tier-routing model for the access gate (Step 7, extended in Step 8 Part A).
 
-Maps each intervention to a routing decision over the two-tier capability profile
-(Sihor = local / Tier 1, Bhavnagar = tertiary / Tier 2). Reuses src/feasibility.py
-EXACTLY for the capability lookups — no reimplementation.
+Each intervention now has TWO routings kept SEPARATE (the honest core of Path B):
+  * delivery_routing  — most-restrictive over its delivery_capabilities (day-to-day
+    execution; local in Sihor wherever possible).
+  * oversight_routing — routing for its oversight specialist consult (one-touch), or None
+    if the intervention has no distinct specialist.
 
-MOST-RESTRICTIVE-WINS: an intervention may require several capabilities. It is gated on
-ALL of them, and its routing is the most restrictive: if any one needs tertiary, the
-intervention needs a Bhavnagar trip; if any one is unavailable at both tiers, the whole
-intervention is an ACCESS BARRIER (never silently dropped).
+Reuses src/feasibility.py exactly for capability lookups. MOST-RESTRICTIVE-WINS applies
+within each capability set.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from src.feasibility import FeasibilityStatus
 from src.agents.types import govern_feasibility  # reuses feasibility.check_feasibility
+from src.gate.intervention_capabilities import (
+    INTERVENTION_CAPABILITIES,
+    LEVER_DISPLAY,
+)
 
-# Lever -> the capability_id(s) its intervention requires (documented mapping). The gate
-# gates on ALL of these (most-restrictive wins). These mirror the capabilities the Step-4
-# agents already check; kept here as the gate's explicit lever->capability contract.
-LEVER_CAPABILITIES: dict[str, list[str]] = {
-    "mobility": ["prehabilitation"],
-    "heart_failure_symptoms": ["general_physician", "antihypertensives"],
-    "critical_preop_stabilization": ["cardiac_icu"],
-    "hba1c": ["hba1c_test", "insulin", "oral_hypoglycemics"],
-    "asthma_control": ["general_physician", "inhaled_corticosteroids", "inhaled_bronchodilators"],
-    "smoking_status": ["smoking_cessation_support"],
-}
+# Backward-compatible alias: the Step-7 "lever -> capabilities" map is the delivery set.
+LEVER_CAPABILITIES = {k: v["delivery"] for k, v in INTERVENTION_CAPABILITIES.items()}
 
-# The surgical procedure itself.
 CABG_CAPABILITY = "cabg"
 
-# status -> (routing_label, tier, flagged, is_access_barrier)
+# delivery status -> (routing_label, tier, flagged, is_access_barrier)
 _ROUTING = {
     FeasibilityStatus.LOCAL: ("Do locally in Sihor", "local", False, False),
     FeasibilityStatus.PARTIAL_LOCAL: (
@@ -42,6 +36,19 @@ _ROUTING = {
     FeasibilityStatus.PARTIAL_TERTIARY: ("Likely Bhavnagar, verify", "tertiary", True, False),
     FeasibilityStatus.UNAVAILABLE: (
         "ACCESS BARRIER — not available at Sihor or Bhavnagar", "none", True, True),
+}
+
+# oversight status -> consult-flavored label
+_OVERSIGHT_ROUTING = {
+    FeasibilityStatus.LOCAL: ("Specialist available locally in Sihor", "local", False, False),
+    FeasibilityStatus.PARTIAL_LOCAL: (
+        "Specialist may be available locally, verify", "local", True, False),
+    FeasibilityStatus.NEEDS_TERTIARY: (
+        "Specialist consult: one trip to Bhavnagar", "tertiary", False, False),
+    FeasibilityStatus.PARTIAL_TERTIARY: (
+        "Specialist consult: one trip to Bhavnagar (verify availability)", "tertiary", True, False),
+    FeasibilityStatus.UNAVAILABLE: (
+        "SPECIALIST ACCESS BARRIER — no specialist at Sihor or Bhavnagar", "none", True, True),
 }
 
 
@@ -54,7 +61,7 @@ class RoutingDecision:
     status: FeasibilityStatus
     routing_label: str
     tier: str                 # "local" | "tertiary" | "none"
-    flagged: bool             # partial availability -> verify
+    flagged: bool
     is_access_barrier: bool
     governing_capability: str
     note: str
@@ -64,41 +71,68 @@ class RoutingDecision:
 class RoutedIntervention:
     lever: str
     phase_number: int
-    capabilities: list
-    routing: RoutingDecision
+    delivery_capabilities: list
+    delivery_routing: RoutingDecision
+    oversight_capability: str | None
+    oversight_routing: RoutingDecision | None
+    access_description: str
 
 
-def route_from_feasibility(fr) -> RoutingDecision:
-    """Map a governing FeasibilityResult to a RoutingDecision."""
-    label, tier, flagged, barrier = _ROUTING[fr.status]
+def route_from_feasibility(fr, table=_ROUTING) -> RoutingDecision:
+    label, tier, flagged, barrier = table[fr.status]
     return RoutingDecision(
-        status=fr.status,
-        routing_label=label,
-        tier=tier,
-        flagged=flagged,
-        is_access_barrier=barrier,
-        governing_capability=fr.action_id,
-        note=fr.note,
+        status=fr.status, routing_label=label, tier=tier, flagged=flagged,
+        is_access_barrier=barrier, governing_capability=fr.action_id, note=fr.note,
     )
 
 
 def route_capabilities(capabilities, patient_tier, profile_path=None) -> RoutingDecision:
-    """Most-restrictive routing across `capabilities` (reuses govern_feasibility, which
-    reuses feasibility.check_feasibility). Raises if a capability is unknown."""
+    """Most-restrictive delivery routing across `capabilities`. Raises if unknown."""
     fr = govern_feasibility(list(capabilities), patient_tier, profile_path)
-    return route_from_feasibility(fr)
+    return route_from_feasibility(fr, _ROUTING)
+
+
+def route_oversight(oversight_capability, patient_tier, profile_path=None) -> RoutingDecision:
+    """Routing for a single specialist oversight consult (consult-flavored labels)."""
+    fr = govern_feasibility([oversight_capability], patient_tier, profile_path)
+    return route_from_feasibility(fr, _OVERSIGHT_ROUTING)
+
+
+def _access_description(lever, delivery, oversight_cap, oversight) -> str:
+    name = LEVER_DISPLAY.get(lever, lever)
+    where = "locally in Sihor" if delivery.tier == "local" else (
+        "at Bhavnagar (tertiary)" if delivery.tier == "tertiary" else "NOWHERE (access barrier)")
+    parts = [f"{name} — delivered {where}"]
+    if oversight is None:
+        parts.append("overseen locally (general physician / physiotherapy); no specialist consult")
+    elif oversight.is_access_barrier:
+        parts.append(f"SPECIALIST ACCESS BARRIER: no {oversight_cap} at Sihor or Bhavnagar")
+    elif oversight.tier == "tertiary":
+        parts.append(f"requires one initial {oversight_cap} consult in Bhavnagar to set the plan")
+    else:
+        parts.append(f"{oversight_cap} available locally")
+    return "; ".join(parts) + "."
 
 
 def route_intervention(lever, phase_number, patient_tier, profile_path=None) -> RoutedIntervention:
-    """Route one intervention (by lever) to a tier decision."""
-    if lever not in LEVER_CAPABILITIES:
+    if lever not in INTERVENTION_CAPABILITIES:
         raise UnknownInterventionError(f"no capability mapping for lever {lever!r}")
-    caps = LEVER_CAPABILITIES[lever]
+    spec = INTERVENTION_CAPABILITIES[lever]
+    delivery_caps = spec["delivery"]
+    oversight_cap = spec["oversight"]
+    delivery = route_capabilities(delivery_caps, patient_tier, profile_path)
+    oversight = (
+        route_oversight(oversight_cap, patient_tier, profile_path)
+        if oversight_cap is not None else None
+    )
     return RoutedIntervention(
         lever=lever,
         phase_number=phase_number,
-        capabilities=caps,
-        routing=route_capabilities(caps, patient_tier, profile_path),
+        delivery_capabilities=delivery_caps,
+        delivery_routing=delivery,
+        oversight_capability=oversight_cap,
+        oversight_routing=oversight,
+        access_description=_access_description(lever, delivery, oversight_cap, oversight),
     )
 
 
