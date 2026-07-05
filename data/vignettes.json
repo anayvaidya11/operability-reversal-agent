@@ -8,8 +8,10 @@
     "design_intent_values": [
       "operable_at_baseline",
       "reversible_with_optimization",
-      "fixed_high_risk"
+      "fixed_high_risk",
+      "reversible_but_access_blocked"
     ],
+    "step_9_note": "Step 9 added SYNTH-019 (reversible_but_access_blocked): clinically reversible (baseline >= threshold, visible-lever optimization crosses below threshold) BUT a required intervention (mobility / cardiac prehabilitation) depends on 'cardiac_prehabilitation_program', unavailable at both tiers -> the access gate flags an ACCESS BARRIER without overruling the clinical verdict. Counts now: operable_at_baseline 5, reversible_with_optimization 7, fixed_high_risk 6, reversible_but_access_blocked 1 (total 19).",
     "euroscore_input_fields": [
       "age",
       "sex",
@@ -984,6 +986,69 @@
         "thoracic_aorta_surgery": false
       },
       "modifiable_levers": []
+    },
+    {
+      "id": "SYNTH-019",
+      "synthetic": true,
+      "design_intent": "reversible_but_access_blocked",
+      "grandmother_analog": false,
+      "rationale": "ACCESS HONESTY CASE. Clinically this decline is REVERSIBLE: with fixed burden (poor LV, extracardiac arteriopathy, moderate renal) the baseline is in the declined band, and optimizing the euroscore-visible levers (deconditioning + uncontrolled asthma) would bring predicted mortality below threshold. BUT the reversal hinges on a supervised pre-operative cardiac rehabilitation program (see access_dependency) that is genuinely unavailable at BOTH Sihor and Bhavnagar. So the pathway is blocked on ACCESS grounds, not clinical grounds. The agent must report this honestly: clinically reversible AND access-barriered on the required mobility intervention — an access failure distinct from a clinical one. The clinical verdict is NOT overruled by the access barrier; they are reported together.",
+      "location_tier": "local",
+      "clinical_context": {
+        "indication": "CABG",
+        "coronary_disease_extent": "Two-vessel disease with poor left ventricular function, peripheral (extracardiac) arterial disease, and moderate renal impairment. CABG indicated (synthetic)."
+      },
+      "access_dependency": {
+        "lever": "mobility",
+        "capability_id": "cardiac_prehabilitation_program",
+        "note": "This patient's reversal depends on a supervised cardiac prehabilitation program, absent at both reachable tiers — an ACCESS barrier on a required-for-operability intervention. [TO VERIFY — real local availability]."
+      },
+      "euroscore_inputs": {
+        "age": 66,
+        "sex": "male",
+        "renal_impairment": "moderate",
+        "extracardiac_arteriopathy": true,
+        "poor_mobility": true,
+        "previous_cardiac_surgery": false,
+        "chronic_lung_disease": true,
+        "active_endocarditis": false,
+        "critical_preoperative_state": false,
+        "diabetes_on_insulin": false,
+        "nyha_class": "II",
+        "ccs_class4_angina": false,
+        "lv_function": "poor",
+        "recent_mi": false,
+        "pulmonary_hypertension": "none",
+        "urgency": "elective",
+        "weight_of_intervention": "isolated_cabg",
+        "thoracic_aorta_surgery": false
+      },
+      "modifiable_levers": [
+        {
+          "lever": "asthma_control",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "chronic_lung_disease",
+          "status": "poorly_controlled",
+          "optimizable": true,
+          "note": "Maps to EuroSCORE II chronic_lung_disease. [TO VERIFY — asthma to chronic_lung_disease mapping per SPEC.md section d]."
+        },
+        {
+          "lever": "mobility",
+          "coupling": "euroscore_visible",
+          "euroscore_field": "poor_mobility",
+          "status": "deconditioned",
+          "optimizable": true,
+          "note": "Prehabilitation candidate; maps to EuroSCORE II poor_mobility. Reversal blocked by absent cardiac prehabilitation program (see access_dependency)."
+        },
+        {
+          "lever": "hba1c",
+          "coupling": "needs_risk_modifier",
+          "euroscore_field": null,
+          "status": "elevated",
+          "optimizable": true,
+          "note": "Not a EuroSCORE II input. [TO VERIFY — HbA1c target per SPEC.md section f]."
+        }
+      ]
     }
   ]
 }

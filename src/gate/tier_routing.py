@@ -114,11 +114,16 @@ def _access_description(lever, delivery, oversight_cap, oversight) -> str:
     return "; ".join(parts) + "."
 
 
-def route_intervention(lever, phase_number, patient_tier, profile_path=None) -> RoutedIntervention:
+def route_intervention(
+    lever, phase_number, patient_tier, profile_path=None, extra_delivery_capabilities=None
+) -> RoutedIntervention:
     if lever not in INTERVENTION_CAPABILITIES:
         raise UnknownInterventionError(f"no capability mapping for lever {lever!r}")
     spec = INTERVENTION_CAPABILITIES[lever]
-    delivery_caps = spec["delivery"]
+    # A patient-specific access_dependency may add a capability this particular patient's
+    # intervention hinges on (Step 9). Included in the delivery set so most-restrictive-wins
+    # can surface an ACCESS BARRIER without touching the global lever mapping.
+    delivery_caps = list(spec["delivery"]) + list(extra_delivery_capabilities or [])
     oversight_cap = spec["oversight"]
     delivery = route_capabilities(delivery_caps, patient_tier, profile_path)
     oversight = (

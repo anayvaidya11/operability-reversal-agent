@@ -53,6 +53,7 @@ LEVER_NAMES = {
 
 DESIGN_INTENTS = {
     "operable_at_baseline", "reversible_with_optimization", "fixed_high_risk",
+    "reversible_but_access_blocked",
 }
 COUPLINGS = {"euroscore_visible", "needs_risk_modifier"}
 AVAILABILITY_VALUES = {"yes", "no", "partial", "unknown"}
@@ -192,10 +193,11 @@ class Validator:
                     if not isinstance(lev.get("note"), str):
                         self.err(ltag, "missing/invalid 'note'")
 
-            # coupling constraint for reversible cases
-            if di == "reversible_with_optimization" and isinstance(levers, list):
+            # coupling constraint for reversible cases (incl. access-blocked reversibles)
+            if di in ("reversible_with_optimization", "reversible_but_access_blocked") \
+                    and isinstance(levers, list):
                 if visible_count < MIN_VISIBLE_LEVERS_FOR_REVERSIBLE:
-                    self.err(tag, f"reversible_with_optimization requires >= "
+                    self.err(tag, f"{di} requires >= "
                                   f"{MIN_VISIBLE_LEVERS_FOR_REVERSIBLE} euroscore_visible "
                                   f"levers, found {visible_count}")
 
@@ -298,11 +300,13 @@ class Validator:
             if di == "operable_at_baseline":
                 if not (base < thr):
                     self.err(tag, f"operable_at_baseline requires baseline < threshold {nums}")
-            elif di == "reversible_with_optimization":
+            elif di in ("reversible_with_optimization", "reversible_but_access_blocked"):
+                # Same CLINICAL reversibility property for both; the access barrier on
+                # reversible_but_access_blocked is a GATE outcome, not a score property.
                 if not (base >= thr):
-                    self.err(tag, f"reversible requires baseline >= threshold {nums}")
+                    self.err(tag, f"{di} requires baseline >= threshold {nums}")
                 if not (opt < thr):
-                    self.err(tag, f"reversible requires optimized < threshold {nums}")
+                    self.err(tag, f"{di} requires optimized < threshold {nums}")
             elif di == "fixed_high_risk":
                 if not (base >= thr):
                     self.err(tag, f"fixed_high_risk requires baseline >= threshold {nums}")

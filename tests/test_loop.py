@@ -112,7 +112,9 @@ def test_all_vignettes_terminal_state_matches_design_intent(vid):
     di = v["design_intent"]
     if di == "operable_at_baseline":
         assert r.terminal_state is TerminalState.OPERABLE_AT_BASELINE
-    elif di == "reversible_with_optimization":
+    elif di in ("reversible_with_optimization", "reversible_but_access_blocked"):
+        # Both are clinically reversible; the access barrier (SYNTH-019) is a gate flag,
+        # it does not change the clinical terminal_state.
         assert r.terminal_state is TerminalState.OPERABLE_AFTER_OPTIMIZATION
     elif di == "fixed_high_risk":
         # OPTIMIZED_BUT_STILL_HIGH_RISK if it has agent-addressable levers, else FIXED

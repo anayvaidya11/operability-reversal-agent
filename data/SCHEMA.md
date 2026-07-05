@@ -94,13 +94,22 @@ Each vignette object:
 |-------|------|------------------------|
 | `id` | string | Unique, e.g. `"SYNTH-001"`. |
 | `synthetic` | boolean | MUST be `true`. |
-| `design_intent` | string | `"operable_at_baseline"` \| `"reversible_with_optimization"` \| `"fixed_high_risk"`. |
+| `design_intent` | string | `"operable_at_baseline"` \| `"reversible_with_optimization"` \| `"fixed_high_risk"` \| `"reversible_but_access_blocked"`. |
 | `grandmother_analog` | boolean | Exactly one vignette in the file is `true`. |
 | `rationale` | string | Plain-language reason for the design_intent label. |
 | `location_tier` | string | `"local"` \| `"tertiary"`. |
 | `clinical_context` | object | Free-form narrative context (see below). |
+| `access_dependency` | object | Optional (Step 9). A patient-specific capability a required intervention hinges on, used to create an honest ACCESS BARRIER. Fields: `lever` (which intervention), `capability_id` (the required capability), `note`. |
 | `euroscore_inputs` | object | Keys MUST equal the canonical set in §1.1 exactly. |
 | `modifiable_levers` | array | Zero or more lever objects (§2.3). |
+
+**`design_intent` = `reversible_but_access_blocked`** (Step 9): clinically identical score
+property to `reversible_with_optimization` (baseline ≥ threshold AND optimized-visible <
+threshold), but the pathway is blocked on ACCESS grounds — a required intervention depends
+on a capability unavailable at both tiers (via `access_dependency`). The access barrier is a
+**gate** outcome, NOT a score property, so the validator's score checks treat it exactly
+like `reversible_with_optimization`; the clinical terminal_state stays
+`OPERABLE_AFTER_OPTIMIZATION` and the barrier is reported as an orthogonal flag.
 
 `clinical_context` object:
 

@@ -108,7 +108,7 @@ def test_every_vignette_satisfies_its_design_intent_score_property():
         di = v["design_intent"]
         if di == "operable_at_baseline":
             assert base < thr, (v["id"], base)
-        elif di == "reversible_with_optimization":
+        elif di in ("reversible_with_optimization", "reversible_but_access_blocked"):
             assert base >= thr and opt < thr, (v["id"], base, opt)
         elif di == "fixed_high_risk":
             assert base >= thr and opt >= thr, (v["id"], base, opt)

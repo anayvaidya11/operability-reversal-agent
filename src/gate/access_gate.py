@@ -30,13 +30,19 @@ class GatedPathway:
     access_summary: dict = field(default_factory=dict)
 
 
-def _routed_from_phases(plan, phase_numbers, patient_tier, profile_path):
+def _routed_from_phases(plan, phase_numbers, patient_tier, profile_path, access_dependency):
     routed = []
+    dep_lever = access_dependency.get("lever") if access_dependency else None
+    dep_cap = access_dependency.get("capability_id") if access_dependency else None
     for phase in plan.phases:
         if phase.phase_number in phase_numbers:
             for rec in phase.interventions:
+                extra = [dep_cap] if (dep_lever and rec.lever == dep_lever) else None
                 routed.append(
-                    route_intervention(rec.lever, phase.phase_number, patient_tier, profile_path)
+                    route_intervention(
+                        rec.lever, phase.phase_number, patient_tier, profile_path,
+                        extra_delivery_capabilities=extra,
+                    )
                 )
     return routed
 
@@ -44,12 +50,13 @@ def _routed_from_phases(plan, phase_numbers, patient_tier, profile_path):
 def apply_access_gate(loop_result, profile_path=None, max_tertiary_trips=None) -> GatedPathway:
     plan = loop_result.plan
     patient_tier = loop_result.patient_tier
+    access_dependency = getattr(loop_result, "access_dependency", None)
 
     executed = {it.phase_number for it in loop_result.trace if it.phase_number > 0}
     designed_only = {p.phase_number for p in plan.phases} - executed
 
-    required = _routed_from_phases(plan, executed, patient_tier, profile_path)
-    designed_not_required = _routed_from_phases(plan, designed_only, patient_tier, profile_path)
+    required = _routed_from_phases(plan, executed, patient_tier, profile_path, access_dependency)
+    designed_not_required = _routed_from_phases(plan, designed_only, patient_tier, profile_path, access_dependency)
     all_interventions = required + designed_not_required
 
     surgical_routing = route_surgery(patient_tier, profile_path)

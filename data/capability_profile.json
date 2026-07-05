@@ -206,6 +206,14 @@
       "notes": "[TO VERIFY — whether structured prehabilitation/physiotherapy exists at either tier]."
     },
     {
+      "capability_id": "cardiac_prehabilitation_program",
+      "category": "procedures",
+      "description": "Structured, supervised pre-operative CARDIAC rehabilitation program (monitored exercise + optimization) — distinct from general physiotherapy.",
+      "local_available": "no",
+      "tertiary_available": "no",
+      "notes": "[TO VERIFY — realistically absent at both Sihor (CHC/small private) and the Bhavnagar district cardiac unit, which is surgery-focused; a plausible ACCESS gap in this geography. Added in Step 9 for the access-barrier honesty case (SYNTH-019)]."
+    },
+    {
       "capability_id": "general_physician",
       "category": "specialist_availability",
       "description": "General physician / primary care clinician.",

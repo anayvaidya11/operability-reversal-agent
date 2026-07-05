@@ -179,6 +179,27 @@ def test_access_strain_orthogonal_to_clinical_state():
     assert g.time_infeasible is True
 
 
+# --- SYNTH-019: clinically reversible BUT access-blocked (Step 9 Part A) --------------
+
+def test_synth019_clinically_reversible_but_access_blocked():
+    r = run_reassessment_loop(BY_ID["SYNTH-019"])
+    g = apply_access_gate(r)
+
+    # clinical verdict is NOT overruled by the access barrier
+    assert r.terminal_state is TerminalState.OPERABLE_AFTER_OPTIMIZATION
+
+    # but a required intervention is an ACCESS BARRIER, naming the blocked capability
+    assert len(g.access_barriers) == 1
+    ri, kind = g.access_barriers[0]
+    assert ri.lever == "mobility"
+    assert kind == "delivery"
+    assert "cardiac_prehabilitation_program" in ri.delivery_capabilities
+    assert ri.delivery_routing.is_access_barrier is True
+
+    # the barrier is on a REQUIRED-for-operability intervention (not the designed tail)
+    assert "mobility" in {r_.lever for r_ in g.required_pathway}
+
+
 # --- full suite ----------------------------------------------------------------------
 
 @pytest.mark.parametrize("vid", list(BY_ID))
