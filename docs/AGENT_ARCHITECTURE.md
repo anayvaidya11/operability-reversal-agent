@@ -180,3 +180,67 @@ Conflicts: ICS↔glycemia and beta-blocker↔asthma (both resolved). Resulting p
 | 3 | 8 | `heart_failure_symptoms` | after pulmonary control (RULE_BETABLOCKER_ASTHMA) |
 
 Total 28 weeks; elective → no urgency warning; glycemia (P1) strictly precedes ICS (P2).
+
+---
+
+# Step 6: iterative re-assessment loop (the agentic core)
+
+`src/loop/` turns the static Step-5 plan into an agent: it simulates the patient advancing
+through the plan phase by phase, recomputes EuroSCORE II after each phase (reusing
+`src/risk_calculator.py` **exactly** — no new risk math), and **branches** on the result.
+Deterministic, no LLM.
+
+## Simulation model — `simulation.py`
+
+`advance_phase(current_inputs, phase) -> (updated_inputs, PhaseEffect)`. For each
+intervention in the phase: a **euroscore_visible** lever flips its mapped field to the
+optimized value (shared `src/optimized_state.py` convention); a **needs_risk_modifier**
+lever is recorded in `PhaseEffect.optimized_but_invisible` and **does not change the
+inputs** (Option B deferred — invisible levers contribute 0 to the recomputed score).
+`[TO VERIFY / MODELING ASSUMPTION — the loop assumes each phase reaches its lever target.]`
+
+## Branching algorithm — `reassessment_loop.py`
+
+`run_reassessment_loop(vignette) -> LoopResult`:
+
+1. Compute baseline EuroSCORE II (iteration 0).
+2. Build the plan (decompose → specialists → conflicts → resolve → sequence).
+3. **If baseline `< OPERABILITY_THRESHOLD` → `OPERABLE_AT_BASELINE`** and stop — even if a
+   (redundant, often score-invisible) plan exists. This short-circuit prevents mislabeling
+   an already-operable patient as "operable *after* optimization."
+4. Else if the plan has no phases → `FIXED_HIGH_RISK` (declined, nothing to optimize).
+5. Else iterate phases in order. After each phase, recompute the score and branch:
+   - score `< threshold` → `OPERABLE_AFTER_OPTIMIZATION`, record the **crossing phase**, and
+     **early-stop** — remaining phases are listed in `remaining_phases_not_required` (not
+     applied to the score; "not required for operability, may still be clinically advisable").
+   - else continue.
+6. All phases applied and still `>= threshold` → `OPTIMIZED_BUT_STILL_HIGH_RISK` (the
+   honesty branch: real optimization done, still declined — e.g. SYNTH-008).
+
+### Four terminal states + one orthogonal flag
+
+`OPERABLE_AT_BASELINE`, `OPERABLE_AFTER_OPTIMIZATION`, `OPTIMIZED_BUT_STILL_HIGH_RISK`,
+`FIXED_HIGH_RISK`. **`TIME_INFEASIBLE`** is an *orthogonal* boolean, not a state: for a
+non-elective urgency, if the weeks to reach the terminal outcome exceed
+`MAX_URGENT_OPTIMIZATION_WEEKS`, the flag is set. A case can be
+`OPERABLE_AFTER_OPTIMIZATION` **and** `time_infeasible` — the fix would work but not within
+the surgical deadline. These are never collapsed.
+
+### Routing hint (light; the hard gate is Step 7)
+
+On `OPERABLE_*` states the loop reads the `cabg` capability and attaches a `routing_hint`
+(CABG routes to tertiary). This is a hint only — Step 7 owns the resource gate over *every*
+step.
+
+## End-to-end mapping (all 18 vignettes)
+
+| design_intent | terminal state |
+|---------------|----------------|
+| operable_at_baseline (001–005) | `OPERABLE_AT_BASELINE` |
+| reversible_with_optimization (006,007,009–013) | `OPERABLE_AFTER_OPTIMIZATION` |
+| fixed_high_risk **with** an agent-addressable lever (008, 015) | `OPTIMIZED_BUT_STILL_HIGH_RISK` |
+| fixed_high_risk **no** actionable lever (014,016,017,018) | `FIXED_HIGH_RISK` |
+
+SYNTH-008 additionally carries `time_infeasible=True`. SYNTH-015 is fixed_high_risk with an
+invisible-only `hba1c` lever: optimization is attempted but cannot move the score →
+`OPTIMIZED_BUT_STILL_HIGH_RISK` (honest).
