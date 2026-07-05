@@ -4,6 +4,7 @@
     "warning": "ALL PATIENTS BELOW ARE FICTIONAL AND SYNTHETIC. No real patient data is used, ingested, or represented. Any resemblance to a real person is coincidental. This is a non-validated humanitarian proof-of-concept.",
     "spec_source": "docs/SPEC.md v0.1",
     "step": "Step 2 of 10 — data artifacts only (no risk math, no agent logic).",
+    "step_4_5_rebalance_note": "Step 4.5: with the real EuroSCORE II calculator (Step 3), SYNTH-007/009/010/011/013 were rebalanced by adding FIXED-factor burden (poor LV, extracardiac arteriopathy, moderate renal, recent MI, and/or moderate pulmonary hypertension) so each baseline lands in the declined band (>=6% OPERABILITY_THRESHOLD) while its euroscore_visible levers still bring the optimized score below threshold. (SYNTH-010, baseline 5.56%, was a fifth misfit not in the original Step-4.5 target list but failing the same property; fixed the same way.) Their modifiable_levers arrays and the euroscore_visible fields those levers map to were NOT changed. SYNTH-008 was reclassified from reversible_with_optimization to fixed_high_risk: its visible-lever optimization helps materially (22.4% -> 7.45%) but cannot cross the threshold. Category counts are now: operable_at_baseline 5, reversible_with_optimization 7, fixed_high_risk 6. Enforced by data/validate.py's score-property check.",
     "design_intent_values": [
       "operable_at_baseline",
       "reversible_with_optimization",
@@ -327,17 +328,17 @@
       "synthetic": true,
       "design_intent": "reversible_with_optimization",
       "grandmother_analog": false,
-      "rationale": "Declined patient whose risk is inflated by uncontrolled asthma and deconditioning (both euroscore-visible) plus poor nutrition and glycemic control. Optimizing the visible levers should shift the score below threshold.",
+      "rationale": "Declined patient whose risk is inflated by uncontrolled asthma and deconditioning (both euroscore-visible), on top of FIXED cardiac/vascular burden: poor left ventricular function, extracardiac arteriopathy, and a recent myocardial infarction. Rebalanced in Step 4.5 against the real EuroSCORE II model so the baseline sits in the declined band (>=6%) while optimizing the visible levers still crosses below threshold.",
       "location_tier": "local",
       "clinical_context": {
         "indication": "CABG",
-        "coronary_disease_extent": "Triple-vessel disease, CABG indicated (synthetic)."
+        "coronary_disease_extent": "Triple-vessel disease with poor left ventricular function, peripheral (extracardiac) arterial disease, and recent myocardial infarction. CABG indicated (synthetic; fixed burden added in Step 4.5)."
       },
       "euroscore_inputs": {
         "age": 66,
         "sex": "male",
         "renal_impairment": "normal",
-        "extracardiac_arteriopathy": false,
+        "extracardiac_arteriopathy": true,
         "poor_mobility": true,
         "previous_cardiac_surgery": false,
         "chronic_lung_disease": true,
@@ -346,8 +347,8 @@
         "diabetes_on_insulin": false,
         "nyha_class": "II",
         "ccs_class4_angina": false,
-        "lv_function": "moderate",
-        "recent_mi": false,
+        "lv_function": "poor",
+        "recent_mi": true,
         "pulmonary_hypertension": "none",
         "urgency": "elective",
         "weight_of_intervention": "isolated_cabg",
@@ -391,9 +392,9 @@
     {
       "id": "SYNTH-008",
       "synthetic": true,
-      "design_intent": "reversible_with_optimization",
+      "design_intent": "fixed_high_risk",
       "grandmother_analog": false,
-      "rationale": "Presented decompensated: a critical pre-operative state that is itself modifiable through stabilization, plus uncontrolled asthma. Both are euroscore-visible, so stabilization and pulmonary optimization should reduce risk substantially.",
+      "rationale": "HONESTY CASE (optimization-insufficient variant). Substantial modifiable burden (critical preoperative state + poorly controlled asthma), and visible-lever optimization moves the risk a lot (22.4% -> 7.45%), but even fully optimized the patient stays above OPERABILITY_THRESHOLD. The agent must do real optimization work AND still correctly decline. Distinguished from the no-lever fixed_high_risk cases: here optimization genuinely helps but cannot cross the threshold.",
       "location_tier": "tertiary",
       "clinical_context": {
         "indication": "CABG",
@@ -451,17 +452,17 @@
       "synthetic": true,
       "design_intent": "reversible_with_optimization",
       "grandmother_analog": false,
-      "rationale": "Active smoker with uncontrolled asthma, deconditioning, and heart-failure symptoms. Three euroscore-visible levers give ample room to move the score before any modifier layer.",
+      "rationale": "Active smoker with uncontrolled asthma, deconditioning, and heart-failure symptoms (three euroscore-visible levers), on top of FIXED burden: poor left ventricular function, extracardiac arteriopathy, and moderate renal impairment. Rebalanced in Step 4.5 against the real EuroSCORE II model so the baseline sits in the declined band (>=6%) while optimizing the visible levers still crosses below threshold.",
       "location_tier": "local",
       "clinical_context": {
         "indication": "CABG",
-        "coronary_disease_extent": "Triple-vessel disease, CABG indicated (synthetic)."
+        "coronary_disease_extent": "Triple-vessel disease with poor left ventricular function, peripheral (extracardiac) arterial disease, and moderate renal impairment. CABG indicated (synthetic; fixed burden added in Step 4.5)."
       },
       "euroscore_inputs": {
         "age": 64,
         "sex": "male",
-        "renal_impairment": "normal",
-        "extracardiac_arteriopathy": false,
+        "renal_impairment": "moderate",
+        "extracardiac_arteriopathy": true,
         "poor_mobility": true,
         "previous_cardiac_surgery": false,
         "chronic_lung_disease": true,
@@ -470,7 +471,7 @@
         "diabetes_on_insulin": false,
         "nyha_class": "III",
         "ccs_class4_angina": false,
-        "lv_function": "moderate",
+        "lv_function": "poor",
         "recent_mi": false,
         "pulmonary_hypertension": "none",
         "urgency": "elective",
@@ -525,11 +526,11 @@
       "synthetic": true,
       "design_intent": "reversible_with_optimization",
       "grandmother_analog": false,
-      "rationale": "Insulin-treated diabetic with uncontrolled asthma and deconditioning; anemia adds hidden burden. Two euroscore-visible levers plus modifier-dependent anemia/glycemia.",
+      "rationale": "Insulin-treated diabetic with uncontrolled asthma and deconditioning (two euroscore-visible levers; anemia/glycemia add modifier-dependent burden), on top of FIXED burden: moderate renal impairment, moderate pulmonary hypertension, and a recent myocardial infarction. Rebalanced in Step 4.5 against the real EuroSCORE II model (baseline was 5.56%, just below threshold) so the baseline sits in the declined band (>=6%) while optimizing the visible levers still crosses below threshold.",
       "location_tier": "local",
       "clinical_context": {
         "indication": "CABG",
-        "coronary_disease_extent": "Two-vessel disease, CABG indicated (synthetic)."
+        "coronary_disease_extent": "Two-vessel disease with moderate pulmonary hypertension and recent myocardial infarction. CABG indicated (synthetic; fixed burden added in Step 4.5)."
       },
       "euroscore_inputs": {
         "age": 67,
@@ -545,8 +546,8 @@
         "nyha_class": "II",
         "ccs_class4_angina": false,
         "lv_function": "moderate",
-        "recent_mi": false,
-        "pulmonary_hypertension": "none",
+        "recent_mi": true,
+        "pulmonary_hypertension": "moderate",
         "urgency": "elective",
         "weight_of_intervention": "isolated_cabg",
         "thoracic_aorta_surgery": false
@@ -591,17 +592,17 @@
       "synthetic": true,
       "design_intent": "reversible_with_optimization",
       "grandmother_analog": false,
-      "rationale": "Risk dominated by heart-failure symptoms, deconditioning, and uncontrolled asthma — all euroscore-visible and modifiable — with hypertension as an additional soft lever.",
+      "rationale": "Risk driven by heart-failure symptoms, deconditioning, and uncontrolled asthma (all euroscore-visible and modifiable), on top of FIXED burden: poor left ventricular function, extracardiac arteriopathy, and moderate renal impairment. Rebalanced in Step 4.5 against the real EuroSCORE II model so the baseline sits in the declined band (>=6%) while optimizing the visible levers still crosses below threshold.",
       "location_tier": "tertiary",
       "clinical_context": {
         "indication": "CABG",
-        "coronary_disease_extent": "Triple-vessel disease, CABG indicated (synthetic)."
+        "coronary_disease_extent": "Triple-vessel disease with poor left ventricular function, peripheral (extracardiac) arterial disease, and moderate renal impairment. CABG indicated (synthetic; fixed burden added in Step 4.5)."
       },
       "euroscore_inputs": {
         "age": 62,
         "sex": "male",
-        "renal_impairment": "normal",
-        "extracardiac_arteriopathy": false,
+        "renal_impairment": "moderate",
+        "extracardiac_arteriopathy": true,
         "poor_mobility": true,
         "previous_cardiac_surgery": false,
         "chronic_lung_disease": true,
@@ -610,7 +611,7 @@
         "diabetes_on_insulin": false,
         "nyha_class": "III",
         "ccs_class4_angina": false,
-        "lv_function": "moderate",
+        "lv_function": "poor",
         "recent_mi": false,
         "pulmonary_hypertension": "none",
         "urgency": "elective",
@@ -731,17 +732,17 @@
       "synthetic": true,
       "design_intent": "reversible_with_optimization",
       "grandmother_analog": false,
-      "rationale": "Uncontrolled asthma plus deconditioning are the visible drivers; anemia and active smoking add modifier-dependent burden. Fixed factors are modest, so reversal is plausible.",
+      "rationale": "Uncontrolled asthma plus deconditioning are the visible drivers (anemia and active smoking add modifier-dependent burden), on top of FIXED burden: poor left ventricular function, extracardiac arteriopathy, and moderate renal impairment. Rebalanced in Step 4.5 against the real EuroSCORE II model so the baseline sits in the declined band (>=6%) while optimizing the visible levers still crosses below threshold.",
       "location_tier": "local",
       "clinical_context": {
         "indication": "CABG",
-        "coronary_disease_extent": "Two-vessel disease, CABG indicated (synthetic)."
+        "coronary_disease_extent": "Two-vessel disease with poor left ventricular function, peripheral (extracardiac) arterial disease, and moderate renal impairment. CABG indicated (synthetic; fixed burden added in Step 4.5)."
       },
       "euroscore_inputs": {
         "age": 65,
         "sex": "male",
-        "renal_impairment": "normal",
-        "extracardiac_arteriopathy": false,
+        "renal_impairment": "moderate",
+        "extracardiac_arteriopathy": true,
         "poor_mobility": true,
         "previous_cardiac_surgery": false,
         "chronic_lung_disease": true,
@@ -750,7 +751,7 @@
         "diabetes_on_insulin": false,
         "nyha_class": "II",
         "ccs_class4_angina": false,
-        "lv_function": "moderate",
+        "lv_function": "poor",
         "recent_mi": false,
         "pulmonary_hypertension": "none",
         "urgency": "elective",

@@ -14,12 +14,12 @@ lever optimization (3.72% < 6.0%). SYNTH-008 remains an honest case where visibl
 alone are INSUFFICIENT (22.4% -> 7.45%, still >= 6.0%). All asserted below.
 """
 
-import copy
 import json
 from pathlib import Path
 
 from src.risk_calculator import compute_euroscore_ii
 from src.decomposer import decompose
+from src.optimized_state import optimized_inputs
 from src.config import get_operability_threshold
 
 VIGNETTES = json.loads(
@@ -27,24 +27,10 @@ VIGNETTES = json.loads(
 )["vignettes"]
 BY_ID = {v["id"]: v for v in VIGNETTES}
 
-# The "optimized" (reference / best-case) value for each modifiable EuroSCORE field.
-# This is the state each euroscore_visible lever is driven toward. (The Step-5 loop will
-# own this mapping in production; the test defines it locally.)
-OPTIMIZED_FIELD_VALUE = {
-    "chronic_lung_disease": False,
-    "poor_mobility": False,
-    "nyha_class": "I",
-    "critical_preoperative_state": False,
-}
-
-
 def optimize_visible(vignette: dict) -> dict:
-    """Return a copy of the euroscore_inputs with every euroscore_visible lever's mapped
-    field driven to its optimized value."""
-    inputs = copy.deepcopy(vignette["euroscore_inputs"])
-    for lever in decompose(vignette).euroscore_visible:
-        inputs[lever.euroscore_field] = OPTIMIZED_FIELD_VALUE[lever.euroscore_field]
-    return inputs
+    """Return euroscore_inputs with every euroscore_visible lever driven to its optimized
+    value, using the ONE shared convention in src/optimized_state.py (Step 4.5)."""
+    return optimized_inputs(vignette, decompose(vignette))
 
 
 # --- grandmother (SYNTH-006) ---------------------------------------------------------
@@ -73,13 +59,14 @@ def test_grandmother_crosses_default_threshold():
     assert optimized < threshold           # 3.72 <  6.0  -> potentially operable
 
 
-# --- SYNTH-008: visible levers alone are INSUFFICIENT (honest case) -------------------
+# --- SYNTH-008: fixed_high_risk, optimization-insufficient variant (Step 4.5) --------
 
 def test_synth008_visible_levers_insufficient_at_default_threshold():
-    # Honest counter-case: optimizing the visible levers helps a lot (22.4% -> 7.45%)
-    # but does NOT bring SYNTH-008 below the 6.0% threshold. Reversal is not always
-    # achievable on EuroSCORE-visible levers alone — the agent must be able to say so.
+    # SYNTH-008 was reclassified to fixed_high_risk in Step 4.5: optimizing its visible
+    # levers helps a lot (22.4% -> 7.45%) but does NOT bring it below 6.0%. Reversal is
+    # not always achievable on EuroSCORE-visible levers alone — the agent must say so.
     v = BY_ID["SYNTH-008"]
+    assert v["design_intent"] == "fixed_high_risk"
     baseline = compute_euroscore_ii(v["euroscore_inputs"])
     optimized = compute_euroscore_ii(optimize_visible(v))
     threshold = get_operability_threshold()  # default 6.0
@@ -110,3 +97,20 @@ def test_all_reversible_cases_move_down_or_equal_on_visible():
         baseline = compute_euroscore_ii(v["euroscore_inputs"])
         optimized = compute_euroscore_ii(optimize_visible(v))
         assert optimized < baseline, v["id"]
+
+
+def test_every_vignette_satisfies_its_design_intent_score_property():
+    # Mirrors data/validate.py's Step-4.5 score-property check, locked in pytest too.
+    thr = get_operability_threshold()
+    for v in VIGNETTES:
+        base = compute_euroscore_ii(v["euroscore_inputs"])
+        opt = compute_euroscore_ii(optimize_visible(v))
+        di = v["design_intent"]
+        if di == "operable_at_baseline":
+            assert base < thr, (v["id"], base)
+        elif di == "reversible_with_optimization":
+            assert base >= thr and opt < thr, (v["id"], base, opt)
+        elif di == "fixed_high_risk":
+            assert base >= thr and opt >= thr, (v["id"], base, opt)
+        else:
+            raise AssertionError(f"{v['id']}: unknown design_intent {di!r}")

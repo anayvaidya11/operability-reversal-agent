@@ -277,6 +277,38 @@ clearly-labeled simplification:
 - **Configurable:** yes — an explicit parameter (arg / env var / default), not hard-coded,
   so demonstrations can show sensitivity to the choice.
 
+### Optimized-state convention (Step 4.5)
+
+To decide whether a patient is *reversible*, we recompute EuroSCORE II after driving every
+`euroscore_visible` lever to its **best realistic optimized value**. There is ONE shared
+convention (implemented in `src/optimized_state.py`), used by the score audit, the
+validator's score-property check, the threshold tests, and every later step:
+
+| EuroSCORE field (via its lever) | Optimized value |
+|---------------------------------|-----------------|
+| `chronic_lung_disease` (asthma_control) | `false` |
+| `poor_mobility` (mobility) | `false` |
+| `critical_preoperative_state` (critical_preop_stabilization) | `false` |
+| `nyha_class` (heart_failure_symptoms) | `"I"` if baseline is `"II"`/`"III"`; `"II"` if baseline is `"IV"` |
+
+**NYHA rationale:** NYHA class is a symptom state that improves with medical optimization,
+but a patient in class IV (symptoms at rest) realistically reaches class II within a pre-op
+window, not class I; classes II/III can realistically reach I. Note this best-case
+*reversibility ceiling* differs from the cardiac agent's per-recommendation *target* (a
+conservative one-class improvement, e.g. III→II) — the agent states a cautious plan, while
+the reversibility check asks what is achievable at best. Both are deliberate.
+
+### Score property enforced on the vignettes (Step 4.5)
+
+Each vignette's `design_intent` must be TRUE against the real model (enforced by
+`data/validate.py`):
+
+- `operable_at_baseline` → baseline `< OPERABILITY_THRESHOLD`
+- `reversible_with_optimization` → baseline `≥ threshold` AND optimized `< threshold`
+- `fixed_high_risk` → baseline `≥ threshold` AND optimized `≥ threshold`
+  (either no visible levers, or visible-lever optimization still leaves it declined —
+  e.g. SYNTH-008, which improves 22.4%→7.45% but cannot cross 6.0%).
+
 ### What this is *not*
 
 - It is **not** a claim that a patient below the cutoff is safe to operate on, nor that a

@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """
-validate.py — structural validator for the Step 2 data artifacts.
+validate.py — validator for the data artifacts.
 
-Checks that data/vignettes.json and data/capability_profile.json conform to the schema
-documented in data/SCHEMA.md, and that vignette field names align with docs/SPEC.md
-(via the canonical field lists defined here and in SCHEMA.md section 1).
-
-SCOPE: STRUCTURE ONLY. No risk math, no clinical logic, no EuroSCORE coefficients.
-This script deliberately does not compute or interpret any clinical value.
+Two layers:
+  1. STRUCTURAL checks (Step 2): data/vignettes.json and data/capability_profile.json
+     conform to data/SCHEMA.md, and vignette field names align with docs/SPEC.md. These
+     are pure — no risk math — and run standalone with `--structure-only` even if src/ is
+     absent.
+  2. SCORE-PROPERTY checks (added Step 4.5): using the REAL EuroSCORE II calculator from
+     src/, every vignette must satisfy its design_intent's score relationship against
+     OPERABILITY_THRESHOLD (imported from src/config.py, not hard-coded). This layer makes
+     validate.py depend on src/ — intended, since Step 3 provides the calculator.
 
 Usage:
-    python3 data/validate.py
+    python3 data/validate.py                  # structure + score properties (needs src/)
+    python3 data/validate.py --structure-only # structure checks only (no src/ needed)
 
-Exit code 0 = both files conform. Non-zero = structural errors (printed to stderr).
+Exit code 0 = all requested checks pass. Non-zero = errors (printed to stderr).
 """
 
 import json
@@ -20,6 +24,9 @@ import sys
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent
+# Put the repo root on sys.path so the score-property check can import src/ when this
+# file is run directly as `python3 data/validate.py`. Harmless for the structural layer.
+sys.path.insert(0, str(DATA_DIR.parent))
 
 # --- Canonical field sets (mirror docs/SPEC.md via data/SCHEMA.md section 1) ----------
 
@@ -258,21 +265,77 @@ class Validator:
             elif "[TO VERIFY" not in notes:
                 self.err(tag, "notes must carry a [TO VERIFY] marker (no unverified real-world claims)")
 
-    def run(self):
+    # --- score-property checks (Step 4.5; requires src/) ------------------------------
+
+    def validate_score_properties(self):
+        """Assert each vignette's design_intent score relationship against
+        OPERABILITY_THRESHOLD, using the real EuroSCORE II calculator. Imports src lazily
+        so the structural layer stays independent of src/."""
+        where = "vignettes.json:score"
+        # Lazy imports: only the score layer depends on src/.
+        from src.risk_calculator import compute_euroscore_ii
+        from src.decomposer import decompose
+        from src.optimized_state import optimized_inputs
+        from src.config import get_operability_threshold
+
+        data = self._load("vignettes.json")
+        if data is None:
+            return
+        thr = get_operability_threshold()
+
+        for v in data.get("vignettes", []):
+            vid = v.get("id")
+            di = v.get("design_intent")
+            tag = f"{where}:{vid}"
+            try:
+                base = compute_euroscore_ii(v["euroscore_inputs"])
+                opt = compute_euroscore_ii(optimized_inputs(v, decompose(v)))
+            except Exception as e:  # noqa: BLE001
+                self.err(tag, f"could not compute EuroSCORE II: {e}")
+                continue
+
+            nums = f"(baseline={base:.2f}%, optimized={opt:.2f}%, threshold={thr:.1f}%)"
+            if di == "operable_at_baseline":
+                if not (base < thr):
+                    self.err(tag, f"operable_at_baseline requires baseline < threshold {nums}")
+            elif di == "reversible_with_optimization":
+                if not (base >= thr):
+                    self.err(tag, f"reversible requires baseline >= threshold {nums}")
+                if not (opt < thr):
+                    self.err(tag, f"reversible requires optimized < threshold {nums}")
+            elif di == "fixed_high_risk":
+                if not (base >= thr):
+                    self.err(tag, f"fixed_high_risk requires baseline >= threshold {nums}")
+                if not (opt >= thr):
+                    self.err(tag, f"fixed_high_risk requires optimized >= threshold {nums}")
+            else:
+                self.err(tag, f"unknown design_intent {di!r}")
+
+    def run(self, structure_only=False):
         self.validate_vignettes()
         self.validate_capabilities()
+        if not structure_only:
+            self.validate_score_properties()
         return self.errors
 
 
-def main():
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    structure_only = "--structure-only" in argv
+
     v = Validator()
-    errors = v.run()
+    errors = v.run(structure_only=structure_only)
     if errors:
         print(f"VALIDATION FAILED: {len(errors)} error(s)\n", file=sys.stderr)
         for e in errors:
             print(f"  - {e}", file=sys.stderr)
         return 1
-    print("VALIDATION OK: vignettes.json and capability_profile.json conform to SCHEMA.md.")
+    if structure_only:
+        print("VALIDATION OK (structure only): vignettes.json and capability_profile.json "
+              "conform to SCHEMA.md.")
+    else:
+        print("VALIDATION OK: structure conforms to SCHEMA.md AND every vignette satisfies "
+              "its design_intent score property against OPERABILITY_THRESHOLD.")
     return 0
 
 
