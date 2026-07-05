@@ -92,6 +92,17 @@ MAX_URGENT_OPTIMIZATION_WEEKS: int = 4
 
 
 # =============================================================================
+# Accessibility: tertiary-trip budget (Step 7)
+# =============================================================================
+# How many distinct trips to the tertiary center (Bhavnagar) a rural patient's pathway
+# can reasonably require before it is flagged as logistically strained. This is an
+# ACCESS concern, orthogonal to clinical risk — a plan can be clinically sound yet
+# infeasible for someone who must travel from Sihor. Modeling proxy, not a rule.
+# [TO VERIFY — realistic travel budget for a rural patient with local input.]
+MAX_TERTIARY_TRIPS: int = 3
+
+
+# =============================================================================
 # Modifiable-lever <-> EuroSCORE-field mapping (single source of truth)
 # =============================================================================
 # The EuroSCORE II input fields that are ALSO modifiable levers ("euroscore_visible" /

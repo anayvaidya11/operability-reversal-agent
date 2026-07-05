@@ -57,6 +57,7 @@ class LoopResult:
     trace: list                      # list[IterationRecord], includes iteration 0
     total_weeks: int
     plan: object                     # the OptimizationPlan
+    patient_tier: str = "local"      # patient's home care tier (for the Step-7 access gate)
     unresolved_conflicts: list = field(default_factory=list)
     remaining_phases_not_required: list = field(default_factory=list)
     routing_hint: dict | None = None
@@ -102,6 +103,7 @@ def run_reassessment_loop(vignette: dict, threshold=None, max_urgent_weeks=None)
             trace=trace,
             total_weeks=0,
             plan=plan,
+            patient_tier=vignette["location_tier"],
             unresolved_conflicts=unresolved,
             remaining_phases_not_required=[],
             routing_hint=_routing_hint(vignette),
@@ -118,6 +120,7 @@ def run_reassessment_loop(vignette: dict, threshold=None, max_urgent_weeks=None)
             trace=trace,
             total_weeks=0,
             plan=plan,
+            patient_tier=vignette["location_tier"],
             unresolved_conflicts=unresolved,
             remaining_phases_not_required=[],
             routing_hint=None,
