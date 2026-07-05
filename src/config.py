@@ -17,21 +17,38 @@ import os
 # "declined at baseline". This is a CONFIGURABLE MODELING PROXY, not a clinical
 # clearance line.
 #
-# Default = 8.0%. Rationale: EuroSCORE II predicted mortality above ~8% falls in the
-# high / very-high risk bands that are commonly flagged for multidisciplinary (heart-
-# team) review rather than routine listing. The specific numeric cutoff is a defensible
-# convention, NOT a validated clinical boundary.
-# [TO VERIFY — exact high-risk band cutoff convention with clinical input; SPEC.md §e
-#  records that no clinically-validated default exists.]
+# Default = 6.0% (changed from 8.0% in Step 4; see below and the Step-3 report).
+#
+# Rationale / grounding:
+#   - EuroSCORE II (Nashef et al., Eur J Cardiothorac Surg 2012;41:734-745) frames
+#     predicted in-hospital mortality in risk bands; roughly, >4% is intermediate risk
+#     and higher values are high / very-high risk.
+#   - The 2014 ESC/EACTS Guidelines on myocardial revascularisation (Windecker et al.,
+#     Eur Heart J 2014;35:2541-2619) use EuroSCORE II >= ~4% as an entry criterion for
+#     Heart-Team discussion rather than routine listing.
+#   - Many cardiac programs use a pragmatic 5-6% "multidisciplinary review required"
+#     line before proceeding with elective CABG in complex patients. A 6% proxy sits in
+#     the defensible intermediate-to-high band.
+#   This is a CONFIGURABLE MODELING PROXY, not a clinical clearance line.
+#   [TO VERIFY — exact program-specific cutoff convention with clinical input; the
+#    numeric line is a modeling choice, not a validated boundary. SPEC.md §e records that
+#    no single clinically-validated default exists.]
+#
+# WHY CHANGED FROM 8.0 -> 6.0 (Step 4): the Step-3 report found that with the real
+# EuroSCORE II coefficients, isolated *elective* CABG scores lower than the synthetic
+# vignettes assumed. The grandmother analog (SYNTH-006) baselines at 7.38% — under an
+# 8.0% proxy she was NOT "declined at baseline", defeating the reversal demo. At 6.0%
+# she is correctly "declined at baseline" (7.38% >= 6.0%) and becomes "potentially
+# operable" after visible-lever optimization (3.72% < 6.0%).
 #
 # Override precedence (highest first):
 #   1. explicit `threshold=` argument to get_operability_threshold()
 #   2. environment variable OPERABILITY_THRESHOLD
 #   3. this default
-DEFAULT_OPERABILITY_THRESHOLD: float = 8.0
+DEFAULT_OPERABILITY_THRESHOLD: float = 6.0
 
-# Public default name other modules read. Do NOT compare against a literal 8.0 anywhere;
-# call get_operability_threshold() or read this name.
+# Public default name other modules read. Do NOT compare against a literal number
+# anywhere; call get_operability_threshold() or read this name.
 OPERABILITY_THRESHOLD: float = DEFAULT_OPERABILITY_THRESHOLD
 
 _ENV_VAR = "OPERABILITY_THRESHOLD"

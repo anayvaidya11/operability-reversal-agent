@@ -46,13 +46,22 @@ not a guess.
 > **`[TO VERIFY — locate and cite the exact King Hussein / multidisciplinary optimization
 > figure and its applicability before Option B uses any number]`**
 
-## Honest finding surfaced in Step 3 (needs a Step-4 decision)
+## Step-3 finding → Step-4 resolution (threshold lowered 8.0% → 6.0%)
 
-With the real EuroSCORE II coefficients and the default `OPERABILITY_THRESHOLD` of 8.0%,
-the grandmother analog (SYNTH-006) has a **baseline of ~7.38%** — *just below* the
-threshold — so under the default proxy she is not "declined at baseline." Visible-lever
-optimization still nearly halves her risk (to ~3.72%). Isolated **elective** CABG is
-genuinely low-risk in EuroSCORE II, so several reversible vignettes score ~2–3%. Only
-SYNTH-008 (~22.4% → ~7.4%) crosses the *default* threshold on visible levers alone.
-See the Step-3 report and `test_threshold_sensitivity.py` for the exact numbers; this is
-flagged for a Step-4 decision (adjust threshold, or add fixed burden to the vignettes).
+The Step-3 report found that with the real EuroSCORE II coefficients, isolated **elective**
+CABG is genuinely low-risk, so the grandmother analog (SYNTH-006) baselines at **~7.38%** —
+*below* the 8.0% proxy trialed in Step 3, defeating the reversal demo.
+
+**Step 4 lowered the default `OPERABILITY_THRESHOLD` to 6.0%** (clinically grounded; see
+`src/config.py` and `docs/SPEC.md §e`). At 6.0% the grandmother is correctly **declined at
+baseline (7.38% ≥ 6.0%)** and becomes **potentially operable after visible-lever
+optimization (3.72% < 6.0%)**.
+
+Honest caveats that remain (surfaced, not hidden):
+- **SYNTH-008** (~22.4% → ~7.45%): visible-lever optimization helps materially but is
+  **insufficient** to clear 6.0% — reversal is not always achievable on EuroSCORE-visible
+  levers alone.
+- Several reversible vignettes (SYNTH-007/009/011/013) baseline at ~2–3%, i.e. below 6.0%,
+  so under this proxy they read as "operable at baseline." Adding fixed burden to those
+  vignettes remains a possible future data refinement (the data was not modified in Step 4).
+See `tests/test_threshold_sensitivity.py` for the exact, pinned numbers.

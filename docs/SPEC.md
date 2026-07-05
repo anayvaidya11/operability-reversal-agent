@@ -259,10 +259,23 @@ clearly-labeled simplification:
 
 - **Name:** `OPERABILITY_THRESHOLD`
 - **Units:** percentage predicted in-hospital mortality (same units as the risk model output).
-- **Default value:** **`[TO VERIFY — no default value is asserted here; a defensible value
-  must be chosen with clinical input and documented, not invented]`**
-- **Configurable:** yes — it is an explicit input parameter, not hard-coded, so that
-  demonstrations can show sensitivity to the choice.
+- **Default value:** **6.0%** (set in Step 4; implemented in `src/config.py`). Grounding:
+  EuroSCORE II (Nashef et al. 2012) frames predicted mortality in risk bands (roughly,
+  >4% intermediate, higher = high/very-high); the 2014 ESC/EACTS revascularisation
+  guidelines (Windecker et al., *Eur Heart J* 2014) use EuroSCORE II ≥ ~4% as an entry
+  criterion for Heart-Team discussion; many programs use a pragmatic 5–6% "multidisciplinary
+  review required" line for elective CABG in complex patients. A 6% proxy sits in this
+  defensible intermediate-to-high band. **`[TO VERIFY — exact program-specific cutoff
+  convention with clinical input; the numeric line is a modeling choice, not a validated
+  boundary.]`**
+- **History:** originally left unset in Step 1, then trialed at 8.0% in Step 3. The Step-3
+  report found that with the real EuroSCORE II coefficients, isolated *elective* CABG
+  scores lower than assumed — the grandmother analog baselines at 7.38%, so an 8.0% proxy
+  did not classify her as "declined at baseline." **Step 4 lowered the default to 6.0%**,
+  under which she is correctly declined at baseline (7.38% ≥ 6.0%) and becomes potentially
+  operable after visible-lever optimization (3.72% < 6.0%).
+- **Configurable:** yes — an explicit parameter (arg / env var / default), not hard-coded,
+  so demonstrations can show sensitivity to the choice.
 
 ### What this is *not*
 

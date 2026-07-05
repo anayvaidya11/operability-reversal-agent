@@ -5,13 +5,13 @@ These prove the Option-A pathway: optimizing the EuroSCORE-VISIBLE levers moves 
 predicted score DOWN, before any (deferred, Option-B) supplementary modifier layer
 exists.
 
-HONEST FINDING (see Step-3 report / a Step-4 decision):
-With the real EuroSCORE II coefficients and the DEFAULT OPERABILITY_THRESHOLD (8.0%),
-the grandmother's baseline (~7.38%) sits JUST BELOW the threshold — i.e. under the
-default proxy she is not "declined at baseline". Optimization still nearly halves her
-risk (~3.72%). SYNTH-008 is the vignette that both starts above the default threshold
-and crosses below it on visible levers alone. Both facts are asserted below rather than
-hidden.
+STEP-4 RESOLUTION (see src/config.py and docs/SPEC.md §e):
+The Step-3 report found that with the real EuroSCORE II coefficients, isolated elective
+CABG scores lower than the synthetic data assumed. The default OPERABILITY_THRESHOLD was
+lowered from 8.0% to 6.0% (clinically grounded). At 6.0% the grandmother is correctly
+"declined at baseline" (7.38% >= 6.0%) and becomes "potentially operable" after visible-
+lever optimization (3.72% < 6.0%). SYNTH-008 remains an honest case where visible levers
+alone are INSUFFICIENT (22.4% -> 7.45%, still >= 6.0%). All asserted below.
 """
 
 import copy
@@ -61,36 +61,31 @@ def test_grandmother_optimization_reduces_risk():
     assert (baseline - optimized) > 2.0
 
 
-def test_grandmother_starts_below_default_threshold_FINDING():
-    # Documents the honest tension (not a fudge): at the DEFAULT 8.0% proxy the
-    # grandmother is already sub-threshold. Flagged for a Step-4 decision.
-    baseline = compute_euroscore_ii(BY_ID["SYNTH-006"]["euroscore_inputs"])
-    assert baseline < get_operability_threshold()  # 7.38 < 8.0
-
-
-def test_grandmother_crosses_a_high_risk_threshold_when_configured():
-    # Threshold sensitivity: with the threshold set anywhere in the band between her
-    # optimized and baseline scores (e.g. 7.0%, still a high-risk cutoff), the
-    # grandmother is "declined at baseline" and becomes "operable" after visible-lever
-    # optimization — demonstrating the crossing mechanism and the parameter's effect.
+def test_grandmother_crosses_default_threshold():
+    # THE MONEY DEMO at the Step-4 default threshold (6.0%): the grandmother is
+    # "declined at baseline" and becomes "potentially operable" on visible levers alone.
     g = BY_ID["SYNTH-006"]
     baseline = compute_euroscore_ii(g["euroscore_inputs"])
     optimized = compute_euroscore_ii(optimize_visible(g))
-    demo_threshold = get_operability_threshold(threshold=7.0)
-    assert baseline >= demo_threshold      # declined at baseline
-    assert optimized < demo_threshold      # operable after optimization
+    threshold = get_operability_threshold()  # default 6.0
+    assert threshold == 6.0
+    assert baseline >= threshold           # 7.38 >= 6.0  -> declined at baseline
+    assert optimized < threshold           # 3.72 <  6.0  -> potentially operable
 
 
-# --- SYNTH-008: crosses the DEFAULT threshold on visible levers alone ----------------
+# --- SYNTH-008: visible levers alone are INSUFFICIENT (honest case) -------------------
 
-def test_synth008_crosses_default_threshold_on_visible_levers():
+def test_synth008_visible_levers_insufficient_at_default_threshold():
+    # Honest counter-case: optimizing the visible levers helps a lot (22.4% -> 7.45%)
+    # but does NOT bring SYNTH-008 below the 6.0% threshold. Reversal is not always
+    # achievable on EuroSCORE-visible levers alone — the agent must be able to say so.
     v = BY_ID["SYNTH-008"]
     baseline = compute_euroscore_ii(v["euroscore_inputs"])
     optimized = compute_euroscore_ii(optimize_visible(v))
-    threshold = get_operability_threshold()  # default 8.0
+    threshold = get_operability_threshold()  # default 6.0
     assert baseline >= threshold            # declined at baseline (~22.4%)
-    assert optimized < threshold            # operable after optimization (~7.4%)
-    assert optimized < baseline
+    assert optimized < baseline             # optimization still helps materially
+    assert optimized >= threshold           # ...but remains declined (~7.45%)
 
 
 # --- fixed_high_risk cannot be reversed on visible levers ----------------------------
