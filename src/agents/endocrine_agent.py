@@ -62,14 +62,16 @@ def run(
             make_recommendation(
                 lever="hba1c",
                 action=action,
-                target="HbA1c < 7.5% (53 mmol/mol) [TO VERIFY — ACC/AHA pre-op target]",
+                target="HbA1c < 7.5% (53 mmol/mol) [MODELING ASSUMPTION — exact pre-op target "
+                       "is a modeling choice; clinician-verify]",
                 euroscore_field=None,  # invisible to EuroSCORE II (Option B deferred)
                 capabilities=capabilities,
                 tier=tier,
-                weeks_estimate=12,  # 8-12 weeks [TO VERIFY]
+                weeks_estimate=12,  # 8-12 weeks [MODELING ASSUMPTION]
                 evidence_note=(
-                    "Pre-operative HbA1c >8% is associated with increased surgical-site "
-                    "infection and poor wound healing after CABG [TO VERIFY — cite source]."
+                    "Elevated pre-operative HbA1c is associated with deep sternal wound "
+                    "infection after CABG [CITED — J Cardiothorac Surg 2024 meta-analysis, "
+                    "OR 2.67, PubMed 38311780; clinician-verify]."
                 ),
                 profile_path=capability_profile_path,
             )

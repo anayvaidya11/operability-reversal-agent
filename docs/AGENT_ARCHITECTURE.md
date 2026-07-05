@@ -232,7 +232,7 @@ On `OPERABLE_*` states the loop reads the `cabg` capability and attaches a `rout
 (CABG routes to tertiary). This is a hint only — Step 7 owns the resource gate over *every*
 step.
 
-## End-to-end mapping (all 18 vignettes)
+## End-to-end mapping (all vignettes)
 
 | design_intent | terminal state |
 |---------------|----------------|
@@ -345,3 +345,47 @@ loop iteration → gate decisions).
 a glance" up top and the audit trail at the bottom. Every `[TO VERIFY]` value is rendered
 visibly — the renderer never presents an unsourced clinical number as confirmed. Decision
 support only; it never speaks to a patient or issues an autonomous instruction.
+
+---
+
+# Step 9: eval harness + access-barrier case + sourcing
+
+## Access-barrier vignette (Part A)
+
+A new `design_intent`, **`reversible_but_access_blocked`**, and **SYNTH-019** were added.
+It is clinically identical to a reversible case (baseline ≥ threshold; optimizing visible
+levers crosses below) — so the loop's clinical `terminal_state` is
+`OPERABLE_AFTER_OPTIMIZATION` — **but** a required intervention depends on
+`cardiac_prehabilitation_program`, which is unavailable at both tiers. A per-vignette
+`access_dependency` field is threaded through `LoopResult` into the gate, which appends the
+extra capability so most-restrictive-wins raises an **ACCESS BARRIER** on the required
+`mobility` intervention. The access barrier is an **orthogonal flag** (like
+`TIME_INFEASIBLE` / `access_strain`) — it does **not** overrule the clinical verdict. The
+two are reported together, honestly. Vignette taxonomy is now 19: operable-at-baseline 5,
+reversible 7, fixed-high-risk 6, reversible-but-access-blocked 1.
+
+## Evaluation harness (Part B) — `eval/`
+
+`eval/harness.py` runs six **rule-based** (not model-based) checks over every vignette,
+each pass/fail with a reason: **guideline-concordance** (agents stay in their lever
+domain), **conflict-resolution correctness** (every conflict resolved-by-rule or escalated,
+never dropped; correct ordering rule applied), **resource-feasibility** (no UNAVAILABLE
+required step without an ACCESS-BARRIER flag; routing coherent), **operability-threshold
+correctness** (terminal state matches the score relationship for all 19),
+**thesis-property** (reversible cases: all delivery local except a legitimate access
+barrier), and **honesty** (no operability claim for a non-crossing case; every
+`[TO VERIFY]` surfaced). `eval/metrics_report.py` aggregates into a slide-ready summary
+(pass rate per check, per-intent terminal accuracy, terminal-state tally, conflict counts,
+trip distribution, orthogonal-flag counts). Current result: **100% (114/114 checks)**.
+
+## Sourcing pass (Part C) — `docs/CLINICAL_SOURCES.md`
+
+Every `[TO VERIFY]` clinical marker was reviewed: **6 were CITED** to real, locatable
+sources (corticosteroid hyperglycemia; cardioselective β-blockers in asthma — Cochrane
+CD002992; smoking cessation ≥4 wk — Mills 2011; cardiac prehabilitation; HbA1c→deep
+sternal wound infection — J Cardiothorac Surg 2024; pulmonary optimization/IMT) and **the
+rest reclassified `[MODELING ASSUMPTION]`** (specific numeric targets and all modeling
+proxies). Nothing was fabricated. The clinician report now separates a **CITED
+(clinician-verify)** section from the **`[TO VERIFY]` / MODELING ASSUMPTIONS** section, so
+sourced and unsourced claims render distinctly and honestly. All citations still require
+clinician verification before any real use.

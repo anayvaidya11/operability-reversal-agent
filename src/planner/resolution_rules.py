@@ -35,7 +35,9 @@ RULE_GLYCEMIA_BEFORE_ICS = Rule(
         "uncontrolled diabetes compounds hyperglycemia and surgical-site infection risk. "
         "Establish a glycemic-control trend first, then step up ICS."
     ),
-    source="[TO VERIFY — corticosteroid hyperglycemia in perioperative optimization; cite source]",
+    source="[CITED — inhaled/systemic corticosteroids raise blood glucose: ICS-hyperglycemia "
+           "systematic review (PMC10683519) & glucocorticoid-induced hyperglycemia literature; "
+           "clinician-verify]",
     monitoring_note=(
         "Monitor blood glucose closely during ICS titration; expect a transient rise and "
         "adjust glycemic therapy accordingly."
@@ -58,7 +60,9 @@ RULE_BETABLOCKER_ASTHMA = Rule(
         "sub-intervention (conditional-blocking on that lever only) — the rest of the "
         "heart-failure optimization (diuretics, ACEi/ARB) proceeds."
     ),
-    source="[TO VERIFY — cardioselective beta-blockers in asthma; cite source]",
+    source="[CITED — Salpeter et al., Cochrane Database Syst Rev 2002, CD002992: "
+           "cardioselective beta-blockers in reversible airway disease; watch first doses; "
+           "clinician-verify]",
     monitoring_note=(
         "Confirm asthma control before initiating a cardioselective beta-blocker; watch "
         "for bronchospasm on initiation and after each up-titration."

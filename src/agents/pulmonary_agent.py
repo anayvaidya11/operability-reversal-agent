@@ -59,7 +59,8 @@ def run(
                 ),
                 target=(
                     "chronic_lung_disease: false (asthma well-controlled, FEV1 >=70% "
-                    "predicted [TO VERIFY — FEV1 threshold for anaesthetic clearance])"
+                    "predicted [MODELING ASSUMPTION — anaesthetic-clearance FEV1 threshold; "
+                    "clinician-verify])"
                 ),
                 euroscore_field="chronic_lung_disease",
                 capabilities=[
@@ -68,10 +69,11 @@ def run(
                     "inhaled_bronchodilators",
                 ],
                 tier=tier,
-                weeks_estimate=8,  # 6-8 weeks controller optimization [TO VERIFY]
+                weeks_estimate=8,  # 6-8 weeks controller optimization [MODELING ASSUMPTION]
                 evidence_note=(
-                    "Pre-operative pulmonary optimization reduces post-CABG respiratory "
-                    "complications [TO VERIFY — cite source]."
+                    "Pre-operative pulmonary optimization / inspiratory muscle training "
+                    "reduces post-operative pulmonary complications in cardiac surgery "
+                    "[CITED — cardiac prehab / IMT systematic reviews; clinician-verify]."
                 ),
                 profile_path=capability_profile_path,
                 cross_specialty_flags=[
@@ -97,15 +99,16 @@ def run(
                 action="Smoking cessation support (counselling +/- pharmacotherapy).",
                 target=(
                     "smoking stopped for >=4 weeks pre-operatively "
-                    "[TO VERIFY — cessation interval for CABG]"
+                    "[CITED — >=4wk cessation reduces complications, Mills 2011]"
                 ),
                 euroscore_field=None,  # not a EuroSCORE II input
                 capabilities=["smoking_cessation_support"],
                 tier=tier,
-                weeks_estimate=4,  # 4-8 weeks minimum [TO VERIFY]
+                weeks_estimate=4,  # >=4 weeks (Mills 2011)
                 evidence_note=(
-                    "Smoking cessation >=4 weeks before surgery reduces pulmonary and "
-                    "wound complications [TO VERIFY — cite source]."
+                    "Smoking cessation >=4 weeks before surgery reduces post-operative "
+                    "complications [CITED — Mills et al., Am J Med 2011;124:144, "
+                    "PubMed 21295194; clinician-verify]."
                 ),
                 profile_path=capability_profile_path,
             )

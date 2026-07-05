@@ -44,10 +44,15 @@ def test_grandmother_report():
     assert "DECISION SUPPORT ONLY" in text
     assert "SYNTHETIC DATA" in text
 
-    # [TO VERIFY] visibly rendered
+    # [TO VERIFY] / MODELING ASSUMPTIONS visibly rendered
     assert "[TO VERIFY]" in text
-    assert "[TO VERIFY] — UNSOURCED VALUES SURFACED" in text
+    assert "MODELING ASSUMPTIONS" in text
     assert len(report.to_verify_markers) > 0
+
+    # Step-9 sourcing: CITED claims rendered as sourced (clinician-verify)
+    assert "CLINICAL SOURCING — CITED" in text
+    assert len(report.sourced_citations) > 0
+    assert any("[CITED" in c for c in report.sourced_citations)
 
 
 # --- (b) SYNTH-008: no operability claim ---------------------------------------------

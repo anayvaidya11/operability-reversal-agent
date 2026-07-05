@@ -102,8 +102,15 @@ def render_report_text(report) -> str:
     for c in report.confirmation_flags:
         L.append(f"  ☐ {c}")
 
-    # --- [TO VERIFY] ---
-    L.append(_hr("[TO VERIFY] — UNSOURCED VALUES SURFACED (not confirmed)"))
+    # --- clinical sourcing (Step 9) ---
+    L.append(_hr("CLINICAL SOURCING — CITED (clinician-verify before real use)"))
+    if report.sourced_citations:
+        for c in report.sourced_citations:
+            L.append(f"  ✓ {c}")
+    else:
+        L.append("  (no cited clinical claims used for this patient)")
+
+    L.append(_hr("[TO VERIFY] / MODELING ASSUMPTIONS — SURFACED (not confirmed)"))
     for t in report.to_verify_markers:
         L.append(f"  ! {t}")
 

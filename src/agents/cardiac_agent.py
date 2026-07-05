@@ -55,7 +55,9 @@ def run(
                 weeks_estimate=8,  # 4-8 weeks [TO VERIFY against prehabilitation literature]
                 evidence_note=(
                     "Prehabilitation before cardiac surgery improves functional capacity "
-                    "and reduces post-operative complications [TO VERIFY — cite source]."
+                    "and reduces post-operative complications [CITED — Nat Rev Cardiol 2023 "
+                    "'Prehabilitation in contemporary cardiac surgery' + cardiac-prehab "
+                    "meta-analyses; clinician-verify]."
                 ),
                 profile_path=capability_profile_path,
             )
@@ -77,7 +79,8 @@ def run(
                 weeks_estimate=8,  # 4-8 weeks [TO VERIFY]
                 evidence_note=(
                     "Guideline-directed medical therapy can improve NYHA symptom class "
-                    "pre-operatively [TO VERIFY — cite source]."
+                    "pre-operatively [MODELING ASSUMPTION — the direction is guideline-"
+                    "consistent, but the one-class/8-week magnitude is assumed; clinician-verify]."
                 ),
                 profile_path=capability_profile_path,
                 cross_specialty_flags=[
@@ -108,7 +111,8 @@ def run(
                 weeks_estimate=2,  # 1-2 weeks inpatient [TO VERIFY]
                 evidence_note=(
                     "A critical preoperative state is frequently reversible with "
-                    "stabilization before an elective/urgent operation [TO VERIFY]."
+                    "stabilization before an elective/urgent operation "
+                    "[MODELING ASSUMPTION — stabilization criteria need clinician confirmation]."
                 ),
                 profile_path=capability_profile_path,
             )

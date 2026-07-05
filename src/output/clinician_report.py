@@ -59,19 +59,16 @@ class ClinicianReport:
     required_vs_designed: dict = field(default_factory=dict)
     access_summary: dict = field(default_factory=dict)
     confirmation_flags: list = field(default_factory=list)
-    to_verify_markers: list = field(default_factory=list)
+    sourced_citations: list = field(default_factory=list)   # [CITED ...] markers (clinician-verify)
+    to_verify_markers: list = field(default_factory=list)    # [TO VERIFY] / [MODELING ASSUMPTION]
     audit_trail: list = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return asdict(self)
 
 
-def _collect_to_verify(*texts) -> list:
-    found = []
-    for t in texts:
-        if t and ("[TO VERIFY" in t or "MODELING ASSUMPTION" in t):
-            found.append(t)
-    return found
+def _collect(texts, tokens) -> list:
+    return [t for t in texts if t and any(tok in t for tok in tokens)]
 
 
 def build_clinician_report(vignette: dict) -> ClinicianReport:
@@ -206,13 +203,16 @@ def build_clinician_report(vignette: dict) -> ClinicianReport:
             f"ACCESS BARRIER on {ri.lever} ({kind}) — flagged for human review; not dropped."
         )
 
-    # --- [TO VERIFY] markers surfaced ---
-    tv = []
+    # --- sourcing markers surfaced (Step 9): CITED vs [TO VERIFY]/MODELING ASSUMPTION ---
+    marker_texts = []
     for sr in outputs.values():
         for rec in sr.recommendations:
-            tv += _collect_to_verify(rec.target, rec.evidence_note)
+            marker_texts += [rec.target, rec.evidence_note]
     for r in resolutions.resolutions:
-        tv += _collect_to_verify(_RULE_SOURCE.get(r.rule_id))
+        marker_texts.append(_RULE_SOURCE.get(r.rule_id))
+
+    report.sourced_citations = _collect(marker_texts, ["[CITED"])
+    tv = _collect(marker_texts, ["[TO VERIFY", "[MODELING ASSUMPTION"])
     tv += [
         "OPERABILITY_THRESHOLD default 6.0% is a configurable modeling proxy "
         "[TO VERIFY — program-specific cutoff].",
@@ -223,8 +223,12 @@ def build_clinician_report(vignette: dict) -> ClinicianReport:
         "The loop assumes each phase reaches its lever target [TO VERIFY / MODELING ASSUMPTION].",
     ]
     # de-duplicate, preserve order
-    seen = set()
-    report.to_verify_markers = [x for x in tv if not (x in seen or seen.add(x))]
+    def _dedup(items):
+        seen = set()
+        return [x for x in items if not (x in seen or seen.add(x))]
+
+    report.sourced_citations = _dedup(report.sourced_citations)
+    report.to_verify_markers = _dedup(tv)
 
     # --- audit trail ---
     at = report.audit_trail
