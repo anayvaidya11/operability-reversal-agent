@@ -279,11 +279,28 @@ clearly-labeled simplification:
 ## f. Modifiable vs. fixed risk levers
 
 The core intellectual move of this project is separating risk you **can** change from
-risk you **cannot**. The agent optimizes only the **modifiable** column; the **fixed**
-column is context it must respect but cannot alter.
+risk you **cannot**. This section defines **three** categories, not two:
+
+1. **Modifiable — non-cardiac** — levers the agent optimizes that are *not* native
+   EuroSCORE II inputs (glycemic control, smoking, anemia, nutrition, blood pressure).
+2. **Modifiable — cardiac (`Modifiable-but-cardiac`)** — levers that *are* EuroSCORE II
+   inputs and are nonetheless clinically improvable before surgery (NYHA/heart-failure
+   symptoms, poor mobility, critical preoperative state). Optimizing these moves the
+   predicted score directly.
+3. **Fixed** — context the agent must respect but cannot alter (age, sex, coronary
+   anatomy, prior events, and disease *diagnoses* themselves).
+
+The agent optimizes categories 1 and 2; category 3 is immutable context.
 
 > No target values, thresholds, or magnitudes of benefit are asserted below. Any such
 > specifics are flagged **`[TO VERIFY]`** and deferred to sourcing with clinical input.
+
+> **RESOLVED (Step 3):** NYHA/mobility/critical-preop reclassified as
+> **modifiable-but-cardiac** (category 2 below), reconciling `docs/SPEC.md §f` with the
+> Step-2 data (`data/vignettes.json`, `data/SCHEMA.md §1.2`), which had already tagged
+> these three as `euroscore_visible` modifiable levers. This supersedes the earlier
+> `[TO VERIFY — reconcile modifiable-lever set between SPEC.md §f and Step 2 vignettes]`
+> marker carried in the Step-2 data.
 
 ### Modifiable levers (the agent may try to improve these)
 
@@ -301,6 +318,25 @@ column is context it must respect but cannot alter.
 > number is a design decision that must be made transparently.
 > **`[TO VERIFY / DESIGN DECISION — lever-to-risk mapping]`**
 
+### Modifiable-but-cardiac levers (Step 3 addition)
+
+These are **EuroSCORE II inputs** — so improving them moves the predicted score
+*directly*, with no supplementary modifier layer required — **and** they are clinically
+improvable during a pre-operative optimization window. They are the levers that make the
+Option-A reversal pathway demonstrable today.
+
+| Lever | Maps to EuroSCORE II input | Why it is clinically improvable pre-operatively (plain terms) | Kind of intervention (illustrative) |
+|-------|----------------------------|--------------------------------------------------------------|-------------------------------------|
+| **Heart-failure symptoms (NYHA class)** | `nyha_class` | NYHA functional class reflects heart-failure *symptom burden*, which commonly improves with medical optimization (diuresis, guideline-directed medical therapy) before surgery; it is a symptom state, not a fixed structural fact. **`[TO VERIFY — expected NYHA improvement with optimization]`** | Medical optimization of heart failure / symptom control. |
+| **Poor mobility** | `poor_mobility` | Deconditioning and reduced mobility respond to supervised **prehabilitation** in the weeks before surgery. **`[TO VERIFY — prehabilitation protocol/benefit]`** | Prehabilitation / supervised physical conditioning. |
+| **Critical preoperative state** | `critical_preoperative_state` | An acute decompensated (critical) state is frequently *reversible with stabilization* before an elective/urgent operation, rather than an immutable trait. **`[TO VERIFY — stabilization criteria]`** | Stabilization before surgery. |
+
+> **Why these are not "fixed."** Unlike coronary anatomy or age, each of the three above
+> is a *state* that standard pre-operative care can change. They were previously described
+> in §d as "largely fixed"; Step 3 reclassifies them as **modifiable-but-cardiac** to
+> match how they behave in an optimization pathway and how the Step-2 data already tagged
+> them (`euroscore_visible`).
+
 ### Fixed factors (the agent must respect but cannot change)
 
 | Fixed factor | Why it's treated as fixed here |
@@ -309,7 +345,8 @@ column is context it must respect but cannot alter.
 | **Sex** | Not modifiable; a risk input. |
 | **Coronary anatomy / disease extent** | The anatomical severity of the CAD (e.g. the ~90% blockage) is a structural fact at decision time; the surgery *addresses* it but optimization cannot change the baseline anatomy. |
 | **Prior cardiac events** | History (e.g. previous MI or prior cardiac surgery) is fixed. |
-| **Established diabetes / chronic lung disease diagnoses** | The *diagnosis* is fixed even though *control* is modifiable — an important distinction: the agent optimizes control, not the existence of the disease. |
+| **Insulin status (`diabetes_on_insulin`)** | EuroSCORE II scores diabetes as a **binary insulin-dependence** flag, which is a treatment *status*, treated here as **FIXED**. This is distinct from **glycemic control (HbA1c)**, which is a separate, **non-EuroSCORE-visible modifiable lever** (category 1) — the agent optimizes glycemic control, not the binary insulin flag. |
+| **Established diabetes / chronic lung disease *diagnoses*** | The *diagnosis* is fixed even though *control* is modifiable — the agent optimizes control (and, for lung disease, the `chronic_lung_disease` input via asthma control), not the existence of the disease. |
 
 ---
 
