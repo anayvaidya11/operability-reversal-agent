@@ -298,5 +298,50 @@ N trips to Bhavnagar required."*
 
 Required (crosses at phase 1): `hba1c` and `mobility` → **both local in Sihor** (partial,
 flagged). Designed-not-required tail: `asthma_control`, `heart_failure_symptoms` → local.
-CABG → **Bhavnagar**. **`trip_count = 1`** (surgery only) — every optimization step is
-local; the single trip is the operation itself. That is the accessibility payoff.
+CABG → **Bhavnagar**. Every optimization step's *delivery* is local; the trips are
+specialist consults + the operation (see Step 8).
+
+---
+
+# Step 8: specialist-scarcity layer (Path B) + clinician output
+
+## Part A — initiation-vs-delivery (honest scarcity)
+
+`src/gate/intervention_capabilities.py` splits each intervention into **delivery** (the
+labs/meds/monitoring that execute it day-to-day — local in Sihor) and an **oversight**
+specialist (endocrinologist / pulmonologist / cardiologist) whose input is needed **once**
+to initiate the plan. The honesty note: a "needs endocrinologist" signal is a **one-touch
+consult** (a single Bhavnagar trip), **not** "the infrastructure to manage diabetes is
+missing." This keeps the thesis intact — the gap is **coordination, not machines** — and
+avoids dishonestly converting a consult into a permanent infrastructure barrier.
+
+`tier_routing.py` now produces **two separate routings** per intervention
+(`delivery_routing`, `oversight_routing`) plus an `access_description`, e.g. *"Glycemic
+optimization — delivered locally in Sihor; requires one initial endocrinologist consult in
+Bhavnagar to set the plan."* Oversight can be a `SPECIALIST ACCESS BARRIER` (no/no),
+flagged not dropped.
+
+`trip_accounting.py` counts distinct Bhavnagar trips with two batching assumptions
+(`[TO VERIFY]`): **(1)** cardiac-domain tertiary work (cardiologist, cardiac_icu, CABG)
+folds into the single tertiary cardiac episode — no extra trip; **(2)** non-cardiac
+consults/deliveries in the same loop phase share a trip. Grandmother's honest
+`trip_count = 3`: endocrinology consult (phase 1) + pulmonology consult (phase 2) + CABG;
+**all delivery local**. `access_strain` fires (orthogonally) if trips exceed
+`MAX_TERTIARY_TRIPS`. The gate never overrules the clinical verdict.
+
+## Part B — clinician report + audit trail
+
+`src/output/clinician_report.py` runs the full pipeline and assembles a serializable
+`ClinicianReport`: header (synthetic + decision-support-only + clinician-responsible,
+per SPEC §g); patient summary; plain-language verdict + flags; risk decomposition
+(fixed / visible / invisible-to-score); the ordered optimization pathway with delivery +
+oversight routing, monitoring notes, and applied conflict-resolution rules + rationale +
+source; required-vs-designed separation; access summary; **confirmation flags** (every
+step that needs specialist sign-off); **surfaced `[TO VERIFY]` markers** (never hidden);
+and a full **audit trail** (baseline → each agent → each conflict+resolution+source → each
+loop iteration → gate decisions).
+
+`src/output/render.py` renders a sectioned plain-text/markdown document with a "pathway at
+a glance" up top and the audit trail at the bottom. Every `[TO VERIFY]` value is rendered
+visibly — the renderer never presents an unsourced clinical number as confirmed. Decision
+support only; it never speaks to a patient or issues an autonomous instruction.
