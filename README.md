@@ -15,6 +15,28 @@ optimization does not.
 > accessibility research and demonstration only. It uses synthetic data, is **not** clinically
 > validated, is **not** a medical device, and must **not** be used for real clinical decisions.
 
+## Repo map (start here)
+
+What the system does, in order, and which folder each step lives in:
+
+1. **Patients** — 19 synthetic patients with their risk inputs → `data/vignettes.json`
+2. **Risk score** — predicted surgical mortality from the real EuroSCORE II model →
+   `src/risk_calculator.py` (numbers in `src/euroscore_ii_coefficients.py`)
+3. **Split the risk** — fixed vs. fixable factors → `src/decomposer.py`
+4. **Specialists** — heart, diabetes, and lung agents each propose fixes → `src/agents/`
+5. **Resolve + plan** — settle conflicts and order the fixes into phases → `src/planner/`
+6. **Loop** — apply the plan phase by phase, re-score, decide the outcome → `src/loop/`
+7. **Access gate** — rewrite every step as "do it in Sihor" vs. "trip to Bhavnagar" →
+   `src/gate/`
+8. **Report** — assemble the clinician-facing output → `src/output/`
+9. **Evaluate** — the rule-based checks (6 checks × 19 patients = 114) → `eval/`
+
+The "operable vs. not" line (6%) is `DEFAULT_OPERABILITY_THRESHOLD` in `src/config.py`.
+
+**Need the exact file for a specific feature?** See **[`WHERE_IS_IT.md`](WHERE_IS_IT.md)** — a
+plain-language lookup from "the thing someone asks about" to "the file and function where it
+lives," plus an "If they ask..." quick-reference.
+
 ## Repository layout
 
 | Path | Contents |
